@@ -1,0 +1,3 @@
+C:/Users/Ben Sliman/Desktop/SupKont/build/CMakeFiles/SupKontQuest.dir
+C:/Users/Ben Sliman/Desktop/SupKont/build/CMakeFiles/edit_cache.dir
+C:/Users/Ben Sliman/Desktop/SupKont/build/CMakeFiles/rebuild_cache.dir
