@@ -117,17 +117,16 @@ func update_hud(player_name: String, turn: int, gold: int, msg: String, p_index:
 	info_label.modulate = Color(0.22, 0.45, 0.90) if p_index == 0 else Color(0.88, 0.22, 0.22)
 
 # Affiche la barre de recrutement en bas à la place du HUD
-func show_recruit(camp: Dictionary) -> void:
-	var stats = UnitDefs.TYPES[camp["unit_type"]]
+func show_recruit(camp: Camp) -> void:
+	var stats = UnitDefs.TYPES[camp.unit_type]
 
-	# Texte : nom du camp, type actuel, file
 	var q_text = "vide"
-	if camp["queue"].size() > 0:
+	if camp.queue.size() > 0:
 		var parts = []
-		for t in camp["queue"]:
+		for t in camp.queue:
 			parts.append(UnitDefs.TYPES[t]["label"])
 		q_text = "  →  ".join(parts)
-	camp_label.text = "%s  |  Type : %s  |  File : %s" % [camp["name"], stats["label"], q_text]
+	camp_label.text = "%s  |  Type : %s  |  File : %s" % [camp.name, stats["label"], q_text]
 
 	# Cache le HUD normal, affiche la barre de recrutement
 	msg_label.visible   = false
