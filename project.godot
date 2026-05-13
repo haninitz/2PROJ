@@ -20,6 +20,7 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 Combat="*res://scripts/Combat.gd"
 UnitDefs="*res://scripts/UnitDefs.gd"
 MapDefs="*res://scripts/MapDefs.gd"
+Sound="*res://scripts/Sound.gd"
 
 [display]
 

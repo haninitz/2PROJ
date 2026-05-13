@@ -17,6 +17,8 @@ var forests:    Array = []
 var river_x:    int   = -1
 var bridge_y:   int   = -1
 var bridge_h:   int   = 0
+var has_water:  bool  = false
+var land_zones: Array = []
 var map_chosen: bool  = false
 
 @onready var ui = $UI
@@ -42,10 +44,12 @@ func _init_data(map_index: int) -> void:
 	players = [Player.new("Joueur 1"), Player.new("Joueur 2")]
 
 	var map = MapDefs.MAPS[map_index]
-	forests  = map["forests"]
-	river_x  = map["river_x"]
-	bridge_y = map["bridge_y"]
-	bridge_h = map["bridge_h"]
+	forests    = map["forests"]
+	river_x    = map["river_x"]
+	bridge_y   = map["bridge_y"]
+	bridge_h   = map["bridge_h"]
+	has_water  = map["has_water"]
+	land_zones = map["land_zones"]
 
 	camps = []
 	for data in map["camps"]:
@@ -55,7 +59,16 @@ func _init_data(map_index: int) -> void:
 func _process(_delta: float) -> void:
 	if map_chosen:
 		var p: Player = players[current_player]
-		ui.update_hud(p.name, turn, p.gold, message, current_player)
+		var income = 0
+		var camps_owned = 0
+		for camp in camps:
+			if camp.owner == current_player:
+				income += camp.income
+				camps_owned += 1
+		var selected_unit = ""
+		if selected_idx != -1:
+			selected_unit = UnitDefs.TYPES[camps[selected_idx].unit_type]["label"]
+		ui.update_hud(p.name, turn, p.gold, income, camps_owned, selected_unit, message, current_player)
 	queue_redraw()
 
 # ── Dessin : délégué au Renderer ─────────────────────────────────────────────
@@ -63,7 +76,8 @@ func _draw() -> void:
 	if not map_chosen:
 		return
 	_renderer.draw(self, font, camps, selected_idx,
-		forests, river_x, bridge_y, bridge_h, game_over, winner)
+		forests, river_x, bridge_y, bridge_h,
+		has_water, land_zones, game_over, winner)
 
 # ── Entrées ──────────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
@@ -90,6 +104,7 @@ func _handle_click(pos: Vector2) -> void:
 			selected_idx = clicked
 			ui.show_recruit(camps[clicked])
 			message = "%s sélectionné — Cliquez une cible ou recrutez" % camps[clicked].name
+			Sound.play("select")
 		else:
 			message = "Ce camp ne vous appartient pas !"
 	else:
@@ -115,6 +130,7 @@ func _move_units(src: int, tgt: int) -> void:
 	camps[tgt].units += n
 	camps[src].units = 1
 	message = "%d unités déplacées vers %s" % [n, camps[tgt].name]
+	Sound.play("move")
 
 func _attack(src: int, tgt: int) -> void:
 	if camps[src].units <= 1:
@@ -122,6 +138,7 @@ func _attack(src: int, tgt: int) -> void:
 		return
 	Combat.resolve(camps[src], camps[tgt])
 	message = "Attaque sur %s !" % camps[tgt].name
+	Sound.play("attack")
 
 func _produce_unit() -> void:
 	if selected_idx == -1:
@@ -155,9 +172,11 @@ func _on_recruit(unit_type: String) -> void:
 	camp.queue.append(unit_type)
 	ui.show_recruit(camp)
 	message = "%s ajouté à la file de %s" % [UnitDefs.TYPES[unit_type]["label"], camp.name]
+	Sound.play("recruit")
 
 # ── Fin de tour ──────────────────────────────────────────────────────────────
 func _on_end_turn() -> void:
+	Sound.play("end_turn")
 	selected_idx = -1
 	ui.hide_recruit()
 	_process_queues(current_player)
@@ -199,6 +218,8 @@ func _end_game(w: String) -> void:
 	winner    = w
 	message   = "VICTOIRE DE %s !" % w.to_upper()
 	ui.disable_end_btn()
+	ui.show_victory(w, turn)
+	Sound.play("victory")
 
 # ── Utilitaires ──────────────────────────────────────────────────────────────
 func _camp_at(pos: Vector2) -> int:
