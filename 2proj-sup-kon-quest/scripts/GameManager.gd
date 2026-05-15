@@ -15,31 +15,31 @@ var available_teams = [
 		"color": Color.CYAN
 	},
 	{
-		"name": "Crimson Agents",
+		"name": "Crimson Squad",
 		"color": Color.RED
 	},
 	{
-		"name": "Shadow Vipers",
+		"name": "Shadow Squad",
 		"color": Color.PURPLE
 	},
 	{
-		"name": "Cyber Unit",
+		"name": "Cyber Squad",
 		"color": Color.GREEN
 	},
 	{
-		"name": "Phantom Division",
+		"name": "Phantom Squad",
 		"color": Color.GRAY
 	},
 	{
-		"name": "Eclipse Syndicate",
+		"name": "Eclipse Squad",
 		"color": Color.BLACK
 	},
 	{
-		"name": "Nova Intelligence",
+		"name": "Nova Squad",
 		"color": Color.ORANGE
 	},
 	{
-		"name": "Ghost Protocol",
+		"name": "Ghost Squad",
 		"color": Color.WHITE
 	}
 ]
