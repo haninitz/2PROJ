@@ -68,39 +68,28 @@ func draw(canvas: Node2D, font: Font, camps: Array, selected_idx: int,
 	if game_over:
 		canvas.draw_rect(Rect2(0, 0, WIN_W, MAP_H), Color(0, 0, 0, 0.45))
 
-# ── 3 couches de vagues ───────────────────────────────────────────────────────
+# ── Vagues simplifiées (10 bandes au lieu de ~4000 lignes) ───────────────────
 func _draw_waves(canvas: Node2D, t: float) -> void:
-	var y = 20
-	while y < MAP_H:
+	for i in range(10):
+		var y = 30.0 + i * 58.0
 		var x = 0
-		while x < WIN_W - 16:
-			var y1 = y + sin(x * 0.014 + t * 0.85 + y * 0.018) * 14.0
-			var y2 = y + sin((x+16) * 0.014 + t * 0.85 + y * 0.018) * 14.0
-			canvas.draw_line(Vector2(x, y1), Vector2(x+16, y2), Color(0.28, 0.55, 0.95, 0.32), 2.0)
-			x += 16
-		y += 28
-	y = 34
-	while y < MAP_H:
+		while x < WIN_W - 48:
+			var y1 = y + sin(x * 0.014 + t * 0.85 + i * 0.6) * 13.0
+			var y2 = y + sin((x + 48) * 0.014 + t * 0.85 + i * 0.6) * 13.0
+			canvas.draw_line(Vector2(x, y1), Vector2(x + 48, y2), Color(0.28, 0.55, 0.95, 0.28), 1.8)
+			x += 48
+	for i in range(6):
+		var y = 50.0 + i * 90.0
 		var x = 0
-		while x < WIN_W - 14:
-			var y1 = y + sin(x * 0.028 + t * 2.1 + y * 0.013) * 7.0
-			var y2 = y + sin((x+14) * 0.028 + t * 2.1 + y * 0.013) * 7.0
-			canvas.draw_line(Vector2(x, y1), Vector2(x+14, y2), Color(0.60, 0.82, 1.00, 0.18), 1.5)
-			x += 14
-		y += 28
-	y = 12
-	while y < MAP_H:
-		var x = 0
-		while x < WIN_W - 20:
-			var y1 = y + sin(x * 0.008 + t * 0.45 + y * 0.030) * 20.0
-			var y2 = y + sin((x+20) * 0.008 + t * 0.45 + y * 0.030) * 20.0
-			canvas.draw_line(Vector2(x, y1), Vector2(x+20, y2), Color(0.18, 0.38, 0.75, 0.15), 3.0)
-			x += 20
-		y += 56
+		while x < WIN_W - 64:
+			var y1 = y + sin(x * 0.008 + t * 0.45 + i * 1.1) * 18.0
+			var y2 = y + sin((x + 64) * 0.008 + t * 0.45 + i * 1.1) * 18.0
+			canvas.draw_line(Vector2(x, y1), Vector2(x + 64, y2), Color(0.18, 0.38, 0.75, 0.13), 2.5)
+			x += 64
 
 # ── Cercles d'ondes qui s'élargissent et s'effacent ──────────────────────────
 func _draw_water_ripples(canvas: Node2D, t: float) -> void:
-	for i in range(10):
+	for i in range(5):
 		var cx = float((i * 211 + 89) % WIN_W)
 		var cy = float((i * 127 + 53) % MAP_H)
 		var phase = fmod(t * 0.7 + i * 1.88, TAU)
@@ -112,7 +101,7 @@ func _draw_water_ripples(canvas: Node2D, t: float) -> void:
 
 # ── Écume flottante (taille variée) ──────────────────────────────────────────
 func _draw_water_foam(canvas: Node2D, t: float) -> void:
-	for i in range(40):
+	for i in range(20):
 		var bx = float((i * 173 + 47) % WIN_W)
 		var by = float((i * 97  + 31) % MAP_H)
 		var fx = bx + sin(t * 0.85 + i * 1.4) * 20.0
@@ -133,36 +122,26 @@ func _draw_river_shimmer(canvas: Node2D, river_x: int, bridge_y: int, bridge_h: 
 				Color(0.45, 0.75, 1.00, 0.30), 2.5)
 		y += 16
 
-# ── Forêt dense : 3 anneaux d'arbres à balancement individuel ────────────────
+# ── Forêt : 2 anneaux allégés ────────────────────────────────────────────────
 func _draw_forest(canvas: Node2D, fp: Vector2, t: float) -> void:
-	# ombre au sol
 	canvas.draw_circle(fp + Vector2(4, 4), 56, Color(0, 0, 0, 0.18))
-	# base sombre
 	canvas.draw_circle(fp, 56, Color(0.07, 0.16, 0.07))
 
-	# anneau extérieur — 11 arbres
-	for i in range(11):
-		var angle = i * TAU / 11.0
+	# anneau extérieur — 6 arbres (au lieu de 11)
+	for i in range(6):
+		var angle = i * TAU / 6.0
 		var sway  = sin(t * 1.2 + fp.x * 0.007 + i * 0.57) * 5.5
-		var tp    = fp + Vector2(cos(angle) * 40.0 + sway, sin(angle) * 38.0)
+		var tp    = fp + Vector2(cos(angle) * 38.0 + sway, sin(angle) * 36.0)
 		canvas.draw_circle(tp, 15, C_FOREST)
-		canvas.draw_circle(tp + Vector2(sway * 0.4, -3), 10, Color(0.15, 0.35, 0.15))
 
-	# anneau intermédiaire — 7 arbres
-	for i in range(7):
-		var angle = i * TAU / 7.0 + 0.3
+	# anneau intérieur — 4 arbres (au lieu de 7)
+	for i in range(4):
+		var angle = i * TAU / 4.0 + 0.3
 		var sway  = sin(t * 1.5 + fp.x * 0.007 + i * 0.80) * 4.0
-		var tp    = fp + Vector2(cos(angle) * 24.0 + sway, sin(angle) * 22.0)
-		canvas.draw_circle(tp, 13, Color(0.12, 0.30, 0.12))
-		canvas.draw_circle(tp + Vector2(sway * 0.3, -2), 8, Color(0.20, 0.44, 0.20))
+		var tp    = fp + Vector2(cos(angle) * 22.0 + sway, sin(angle) * 20.0)
+		canvas.draw_circle(tp, 12, Color(0.15, 0.35, 0.15))
 
-	# centre — 3 petits arbres
-	for i in range(3):
-		var angle = i * TAU / 3.0 + t * 0.08
-		var tp    = fp + Vector2(cos(angle) * 10.0, sin(angle) * 10.0)
-		canvas.draw_circle(tp, 9, Color(0.16, 0.38, 0.16))
-
-	canvas.draw_arc(fp, 56, 0, TAU, 32, Color(0.04, 0.12, 0.04), 2.5)
+	canvas.draw_arc(fp, 56, 0, TAU, 24, Color(0.04, 0.12, 0.04), 2.0)
 
 # ── Oiseaux qui traversent la carte ──────────────────────────────────────────
 func _draw_birds(canvas: Node2D, t: float) -> void:
