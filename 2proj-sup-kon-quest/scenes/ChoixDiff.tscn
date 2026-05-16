@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://dm8abm0yik0ev"]
+
+[ext_resource type="Script" uid="uid://vgku03laro7x" path="res://scripts/choix_diff.gd" id="1_wfujs"]
+
+[node name="ChoixDiff" type="Control" unique_id=518273131]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_wfujs")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=367699250]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=74602022]
+layout_mode = 2
+text = "Difficulté IA"
+
+[node name="btn_easy" type="Button" parent="vbox" unique_id=1086443481]
+layout_mode = 2
+text = "Facile"
+
+[node name="btn_med" type="Button" parent="vbox" unique_id=1683276046]
+layout_mode = 2
+text = "Moyen"
+
+[node name="btn_hard" type="Button" parent="vbox" unique_id=768793531]
+layout_mode = 2
+text = "Difficile"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=861924268]
+layout_mode = 2

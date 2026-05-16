@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cm1pojyu0kxit"]
+
+[ext_resource type="Script" uid="uid://hk1ko7c40wyo" path="res://scripts/choix_format.gd" id="1_bi7pn"]
+
+[node name="ChoixFormat" type="Control" unique_id=45843250]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_bi7pn")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=719819670]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=1977692134]
+layout_mode = 2
+text = "Choix du format"
+
+[node name="btn_1v1" type="Button" parent="vbox" unique_id=68944868]
+layout_mode = 2
+text = "1 vs 1"
+
+[node name="btn_2v2" type="Button" parent="vbox" unique_id=720411913]
+layout_mode = 2
+text = "2 vs 2"
+
+[node name="btn_3v3" type="Button" parent="vbox" unique_id=2117883520]
+layout_mode = 2
+text = "3 vs 3"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=833262007]
+layout_mode = 2
+text = "← Retour"

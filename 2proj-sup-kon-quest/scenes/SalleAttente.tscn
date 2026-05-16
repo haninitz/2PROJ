@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://fhk7s6wofvhu"]
+
+[ext_resource type="Script" uid="uid://bfr4nqipmats0" path="res://scripts/salle_attente.gd" id="1_5rbf0"]
+
+[node name="SalleAttente" type="Control" unique_id=1032534030]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_5rbf0")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=297161787]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=234039868]
+layout_mode = 2
+text = "Salle d'attente"
+
+[node name="label_room_name" type="Label" parent="vbox" unique_id=1683819066]
+layout_mode = 2
+text = "Room :"
+
+[node name="label_map" type="Label" parent="vbox" unique_id=1295974544]
+layout_mode = 2
+text = "Map :"
+
+[node name="label_format" type="Label" parent="vbox" unique_id=1660944072]
+layout_mode = 2
+text = "Format :"
+
+[node name="title_equipe_a" type="Label" parent="vbox" unique_id=187185806]
+layout_mode = 2
+text = "Équipe A"
+
+[node name="slots_a" type="VBoxContainer" parent="vbox" unique_id=1501395880]
+layout_mode = 2
+
+[node name="title_equipe_b" type="Label" parent="vbox" unique_id=995668468]
+layout_mode = 2
+text = "Équipe B"
+
+[node name="slots_b" type="VBoxContainer" parent="vbox" unique_id=57647822]
+layout_mode = 2
+
+[node name="btn_lancer" type="Button" parent="vbox" unique_id=939288533]
+layout_mode = 2
+text = "LANCER"
+
+[node name="btn_quitter" type="Button" parent="vbox" unique_id=1356938682]
+layout_mode = 2
+text = "Quitter"
+
+[node name="status_label" type="Label" parent="vbox" unique_id=1498145685]
+layout_mode = 2

@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://bodum16xlql62"]
+
+[ext_resource type="Script" uid="uid://drjcpckqneret" path="res://scripts/choix_mode.gd" id="1_7ocp5"]
+
+[node name="ChoixMode" type="Control" unique_id=2007617906]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_7ocp5")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=553880625]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=1827109624]
+layout_mode = 2
+text = "Choix du mode"
+
+[node name="btn_multi" type="Button" parent="vbox" unique_id=721227145]
+layout_mode = 2
+text = "Multijoueur"
+
+[node name="btn_ai" type="Button" parent="vbox" unique_id=5305611]
+layout_mode = 2
+text = "VS IA"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=1160711832]
+layout_mode = 2
+text = "← Retour"

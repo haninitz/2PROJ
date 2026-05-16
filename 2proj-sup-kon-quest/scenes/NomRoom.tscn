@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://c0jlj6j03epqr"]
+
+[ext_resource type="Script" uid="uid://uh4lfrinh3ul" path="res://scripts/nom_room.gd" id="1_ek01d"]
+
+[node name="NomRoom" type="Control" unique_id=216857566]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ek01d")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=2112639862]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=1789634961]
+layout_mode = 2
+text = "Nom de la room"
+
+[node name="label_room" type="Label" parent="vbox" unique_id=1612640784]
+layout_mode = 2
+text = "Choisis un nom pour ta room :"
+
+[node name="input_room" type="LineEdit" parent="vbox" unique_id=1071060166]
+layout_mode = 2
+placeholder_text = "Ex: room_spy_007"
+
+[node name="btn_create" type="Button" parent="vbox" unique_id=997154850]
+layout_mode = 2
+text = "Créer la room"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=378148586]
+layout_mode = 2
+text = "← Retour"
+
+[node name="status_label" type="Label" parent="vbox" unique_id=452964241]
+layout_mode = 2

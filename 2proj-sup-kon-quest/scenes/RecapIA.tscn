@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://d1wc7k1wo140v"]
+
+[ext_resource type="Script" uid="uid://co7t4ugcxsely" path="res://scripts/recap_ia.gd" id="1_10ras"]
+
+[node name="RecapIA" type="Control" unique_id=303085519]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_10ras")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=1838336170]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=646301770]
+layout_mode = 2
+text = "Récap de la partie"
+
+[node name="label_mode" type="Label" parent="vbox" unique_id=628469967]
+layout_mode = 2
+text = "Mode :"
+
+[node name="label_diff" type="Label" parent="vbox" unique_id=1988083523]
+layout_mode = 2
+text = "Difficulté :"
+
+[node name="label_map" type="Label" parent="vbox" unique_id=1665535271]
+layout_mode = 2
+text = "Map :"
+
+[node name="btn_lancer" type="Button" parent="vbox" unique_id=1498336905]
+layout_mode = 2
+text = "LANCER"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=1085393900]
+layout_mode = 2
+text = "← Retour"

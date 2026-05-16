@@ -10,15 +10,23 @@ config_version=5
 
 [application]
 
-config/name="2PROJ_SupKonQuest"
-run/main_scene="uid://bk003ns6hw0cv"
-config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+config/name="SupKontQuest"
+config/version="1.0"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
 
-[physics]
+[autoload]
 
-3d/physics_engine="Jolt Physics"
+Combat="*res://scripts/Combat.gd"
+GameConfig="*uid://bgywpbtbogiu6"
+NetworkManager="*uid://bp86jvm0funn3"
+RoomManager="*uid://b6s0gw7pftunn"
+
+[display]
+
+window/size/viewport_height=720
 
 [rendering]
 
-rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

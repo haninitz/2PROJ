@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://dikj7d6iyhgaq"]
+
+[ext_resource type="Script" uid="uid://b1x23qnipugut" path="res://scripts/choix_map.gd" id="1_s4g8a"]
+
+[node name="ChoixMap" type="Control" unique_id=19207561]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_s4g8a")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=1540688399]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=257919997]
+layout_mode = 2
+text = "Choix de la map"
+
+[node name="btn_clover" type="Button" parent="vbox" unique_id=1261647253]
+layout_mode = 2
+text = "Clover (Rouge)"
+
+[node name="btn_sam" type="Button" parent="vbox" unique_id=1308135039]
+layout_mode = 2
+text = "Sam (Vert)"
+
+[node name="btn_alex" type="Button" parent="vbox" unique_id=2124759018]
+layout_mode = 2
+text = "Alex (Jaune)"
+
+[node name="btn_jerry" type="Button" parent="vbox" unique_id=2141843111]
+layout_mode = 2
+text = "Jerry (Noir)"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=1526030654]
+layout_mode = 2
+text = "← Retour"
