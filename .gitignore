@@ -3,3 +3,9 @@
 *.import
 export_presets.cfg
 CLAUDE.*
+
+# Claude Code
+.claude/
+
+# Sujet (document interne)
+2PROJ.txt
