@@ -38,6 +38,7 @@ func _ready() -> void:
 	ui.map_selected.connect(_on_map_selected)
 	ui.mode_selected.connect(_on_mode_selected)
 	ui.squads_selected.connect(_on_squads_selected)
+	ui.turn_confirmed.connect(_on_turn_confirmed)
 
 func _on_mode_selected(is_ai: bool, difficulty: String) -> void:
 	ai_mode       = is_ai
@@ -98,6 +99,8 @@ func _draw() -> void:
 # ── Entrées ──────────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
 	if not map_chosen or game_over:
+		return
+	if ui.turn_screen != null and ui.turn_screen.visible:
 		return
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -202,6 +205,8 @@ func _on_end_turn() -> void:
 	_collect_income(current_player)
 	message = Lang.t("msg_select") % players[current_player].name
 	_check_victory()
+	if not game_over:
+		ui.show_turn_screen(players[current_player].name, turn)
 
 func _process_queues(p: int) -> void:
 	for camp in camps:
@@ -216,6 +221,9 @@ func _collect_income(p: int) -> void:
 		if camp.owner == p:
 			player.gold += camp.income
 
+func _on_turn_confirmed() -> void:
+	pass
+
 # ── Victoire ─────────────────────────────────────────────────────────────────
 func _check_victory() -> void:
 	var count = [0, 0]
@@ -225,9 +233,9 @@ func _check_victory() -> void:
 		elif camp.owner == 1:
 			count[1] += 1
 	if count[0] == 0:
-		_end_game("Joueur 2")
+		_end_game(players[1].name)
 	elif count[1] == 0:
-		_end_game("Joueur 1")
+		_end_game(players[0].name)
 
 func _end_game(w: String) -> void:
 	game_over = true

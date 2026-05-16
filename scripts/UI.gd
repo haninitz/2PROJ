@@ -5,6 +5,7 @@ signal recruit_pressed(unit_type: String)
 signal map_selected(map_index: int)
 signal mode_selected(is_ai: bool, difficulty: String)
 signal squads_selected(squad1: String, squad2: String)
+signal turn_confirmed
 
 const WIN_W  = 1152
 const MAP_H  = 620
@@ -32,6 +33,10 @@ var difficulty_screen: Panel
 var squad_screen:      Panel
 var squad_title_label: Label
 var _p1_squad:         String = ""
+var turn_screen:       Panel
+var turn_name_label:   Label
+var turn_num_label:    Label
+var turn_prompt_label: Label
 var title_label:       Label
 var menu_beams:        Array = []
 
@@ -50,6 +55,7 @@ func _ready() -> void:
 	_build_mode_screen()
 	_build_difficulty_screen()
 	_build_squad_screen()
+	_build_turn_screen()
 	_build_main_menu()
 
 # ── Animation du menu principal ──────────────────────────────────────────────
@@ -675,6 +681,84 @@ func _on_squad_picked(squad_name: String) -> void:
 		squad_screen.visible = false
 		map_screen.visible   = true
 		squads_selected.emit(_p1_squad, squad_name)
+
+# ── Écran changement de tour ─────────────────────────────────────────────────
+func _build_turn_screen() -> void:
+	turn_screen = Panel.new()
+	turn_screen.position = Vector2(0, 0)
+	turn_screen.size = Vector2(WIN_W, 720)
+	turn_screen.visible = false
+	var bg = StyleBoxFlat.new()
+	bg.bg_color = Color(0.04, 0.02, 0.08, 0.96)
+	turn_screen.add_theme_stylebox_override("panel", bg)
+	add_child(turn_screen)
+
+	# Ligne décorative haute
+	var line_top = ColorRect.new()
+	line_top.color = Color(0.70, 0.20, 0.50, 0.6)
+	line_top.position = Vector2(100, 220)
+	line_top.size = Vector2(WIN_W - 200, 2)
+	turn_screen.add_child(line_top)
+
+	# "C'est votre tour !"
+	var title = Label.new()
+	title.text = Lang.t("turn_title")
+	title.position = Vector2(0, 240)
+	title.size = Vector2(WIN_W, 50)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.modulate = Color(0.78, 0.65, 0.88)
+	turn_screen.add_child(title)
+
+	# Nom du squad (grand)
+	turn_name_label = Label.new()
+	turn_name_label.position = Vector2(0, 295)
+	turn_name_label.size = Vector2(WIN_W, 110)
+	turn_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	turn_name_label.add_theme_font_size_override("font_size", 64)
+	turn_name_label.modulate = Color(1.00, 0.35, 0.75)
+	turn_screen.add_child(turn_name_label)
+
+	# Numéro de tour
+	turn_num_label = Label.new()
+	turn_num_label.position = Vector2(0, 410)
+	turn_num_label.size = Vector2(WIN_W, 40)
+	turn_num_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	turn_num_label.add_theme_font_size_override("font_size", 22)
+	turn_num_label.modulate = Color(0.65, 0.55, 0.80)
+	turn_screen.add_child(turn_num_label)
+
+	# Ligne décorative basse
+	var line_bot = ColorRect.new()
+	line_bot.color = Color(0.70, 0.20, 0.50, 0.6)
+	line_bot.position = Vector2(100, 460)
+	line_bot.size = Vector2(WIN_W - 200, 2)
+	turn_screen.add_child(line_bot)
+
+	# "Cliquez n'importe où pour commencer"
+	turn_prompt_label = Label.new()
+	turn_prompt_label.text = Lang.t("turn_prompt")
+	turn_prompt_label.position = Vector2(0, 560)
+	turn_prompt_label.size = Vector2(WIN_W, 30)
+	turn_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	turn_prompt_label.add_theme_font_size_override("font_size", 18)
+	turn_prompt_label.modulate = Color(0.60, 0.50, 0.70)
+	turn_screen.add_child(turn_prompt_label)
+
+func _input(event: InputEvent) -> void:
+	if turn_screen == null or not turn_screen.visible:
+		return
+	if event is InputEventMouseButton and event.pressed:
+		turn_screen.visible = false
+		turn_confirmed.emit()
+	elif event is InputEventKey and event.pressed:
+		turn_screen.visible = false
+		turn_confirmed.emit()
+
+func show_turn_screen(squad_name: String, turn_number: int) -> void:
+	turn_name_label.text = squad_name
+	turn_num_label.text  = Lang.t("turn_number") % turn_number
+	turn_screen.visible  = true
 
 # ── Méthodes appelées par Main.gd ────────────────────────────────────────────
 func hide_map_screen() -> void:
