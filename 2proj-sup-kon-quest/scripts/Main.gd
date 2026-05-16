@@ -53,6 +53,7 @@ func _on_map_selected(map_index: int) -> void:
 	ui.hide_map_screen()
 	map_chosen = true
 	_init_data(map_index)
+	GameManager.init(players, camps, regions)
 	_collect_income(0)
 	message = Lang.t("msg_select") % players[0].name
 
@@ -78,15 +79,11 @@ func _init_data(map_index: int) -> void:
 func _process(_delta: float) -> void:
 	if map_chosen:
 		var p: Player = players[current_player]
-		var income = 0
+		var income = GameManager.calculate_income(current_player)
 		var camps_owned = 0
 		for camp in camps:
 			if camp.owner == current_player:
-				income += camp.income
 				camps_owned += 1
-		for region in regions:
-			if _region_owner(region) == current_player:
-				income += region["bonus"]
 		var selected_unit = ""
 		if selected_idx != -1:
 			selected_unit = UnitDefs.TYPES[camps[selected_idx].unit_type]["label"]
@@ -161,6 +158,7 @@ func _attack(src: int, tgt: int) -> void:
 		message = Lang.t("msg_need_atk")
 		return
 	Combat.resolve(camps[src], camps[tgt])
+	GameManager.capture_camp(tgt, camps[tgt].owner)
 	message = Lang.t("msg_attack") % camps[tgt].name
 	Sound.play("attack")
 
@@ -221,36 +219,16 @@ func _process_queues(p: int) -> void:
 			camp.units += 1
 
 func _collect_income(p: int) -> void:
-	var player: Player = players[p]
-	for camp in camps:
-		if camp.owner == p:
-			player.gold += camp.income
-	for region in regions:
-		if _region_owner(region) == p:
-			player.gold += region["bonus"]
-
-func _region_owner(region: Dictionary) -> int:
-	var owner = camps[region["camps"][0]].owner
-	for idx in region["camps"]:
-		if camps[idx].owner != owner:
-			return -1
-	return owner
+	GameManager.give_income(p)
 
 func _on_turn_confirmed() -> void:
 	pass
 
 # ── Victoire ─────────────────────────────────────────────────────────────────
 func _check_victory() -> void:
-	var count = [0, 0]
-	for camp in camps:
-		if camp.owner == 0:
-			count[0] += 1
-		elif camp.owner == 1:
-			count[1] += 1
-	if count[0] == 0:
-		_end_game(players[1].name)
-	elif count[1] == 0:
-		_end_game(players[0].name)
+	var w = GameManager.check_end_game()
+	if w != "":
+		_end_game(w)
 
 func _end_game(w: String) -> void:
 	game_over = true
