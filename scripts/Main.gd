@@ -22,6 +22,8 @@ var land_zones: Array = []
 var map_chosen:    bool   = false
 var ai_mode:       bool   = false
 var ai_difficulty: String = ""
+var squad1_name:   String = ""
+var squad2_name:   String = ""
 
 @onready var ui = $UI
 
@@ -35,10 +37,15 @@ func _ready() -> void:
 	ui.recruit_pressed.connect(_on_recruit)
 	ui.map_selected.connect(_on_map_selected)
 	ui.mode_selected.connect(_on_mode_selected)
+	ui.squads_selected.connect(_on_squads_selected)
 
 func _on_mode_selected(is_ai: bool, difficulty: String) -> void:
 	ai_mode       = is_ai
 	ai_difficulty = difficulty
+
+func _on_squads_selected(squad1: String, squad2: String) -> void:
+	squad1_name = squad1
+	squad2_name = squad2
 
 func _on_map_selected(map_index: int) -> void:
 	ui.hide_map_screen()
@@ -48,7 +55,9 @@ func _on_map_selected(map_index: int) -> void:
 	message = Lang.t("msg_select") % players[0].name
 
 func _init_data(map_index: int) -> void:
-	players = [Player.new(Lang.t("player1")), Player.new(Lang.t("player2"))]
+	var n1 = squad1_name if squad1_name != "" else Lang.t("player1")
+	var n2 = squad2_name if squad2_name != "" else Lang.t("player2")
+	players = [Player.new(n1), Player.new(n2)]
 
 	var map = MapDefs.MAPS[map_index]
 	forests    = map["forests"]

@@ -46,6 +46,10 @@ const STRINGS = {
 		# Noms joueurs
 		"player1":        "Joueur 1",
 		"player2":        "Joueur 2",
+		# Sélection squads
+		"squad_title":    "Choisissez votre équipe",
+		"squad_p1":       "Joueur 1 — Choisissez votre équipe",
+		"squad_p2":       "Joueur 2 — Choisissez votre équipe",
 		# Messages de jeu
 		"msg_select":     "%s — Sélectionnez un de vos camps",
 		"msg_selected":   "%s sélectionné — Cliquez une cible ou recrutez",
@@ -97,6 +101,9 @@ const STRINGS = {
 		"replay":         "REPLAY",
 		"player1":        "Player 1",
 		"player2":        "Player 2",
+		"squad_title":    "Choose your squad",
+		"squad_p1":       "Player 1 — Choose your squad",
+		"squad_p2":       "Player 2 — Choose your squad",
 		"msg_select":     "%s — Select one of your camps",
 		"msg_selected":   "%s selected — Click a target or recruit",
 		"msg_not_yours":  "This camp doesn't belong to you!",
@@ -147,6 +154,9 @@ const STRINGS = {
 		"replay":         "REPETIR",
 		"player1":        "Jugador 1",
 		"player2":        "Jugador 2",
+		"squad_title":    "Elige tu equipo",
+		"squad_p1":       "Jugador 1 — Elige tu equipo",
+		"squad_p2":       "Jugador 2 — Elige tu equipo",
 		"msg_select":     "%s — Selecciona uno de tus campamentos",
 		"msg_selected":   "%s seleccionado — Haz clic en un objetivo o recluta",
 		"msg_not_yours":  "¡Este campamento no te pertenece!",

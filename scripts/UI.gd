@@ -4,6 +4,7 @@ signal end_turn_pressed
 signal recruit_pressed(unit_type: String)
 signal map_selected(map_index: int)
 signal mode_selected(is_ai: bool, difficulty: String)
+signal squads_selected(squad1: String, squad2: String)
 
 const WIN_W  = 1152
 const MAP_H  = 620
@@ -28,6 +29,9 @@ var map_screen:        Panel
 var main_menu:         Panel
 var mode_screen:       Panel
 var difficulty_screen: Panel
+var squad_screen:      Panel
+var squad_title_label: Label
+var _p1_squad:         String = ""
 var title_label:       Label
 var menu_beams:        Array = []
 
@@ -45,6 +49,7 @@ func _ready() -> void:
 	_build_victory_screen()
 	_build_mode_screen()
 	_build_difficulty_screen()
+	_build_squad_screen()
 	_build_main_menu()
 
 # ── Animation du menu principal ──────────────────────────────────────────────
@@ -474,8 +479,8 @@ func _build_mode_screen() -> void:
 	btn2.add_theme_stylebox_override("hover",  h2)
 	btn2.pressed.connect(func():
 		mode_screen.visible = false
-		map_screen.visible  = true
 		mode_selected.emit(false, "")
+		_show_squad_screen()
 	)
 	mode_screen.add_child(btn2)
 
@@ -572,8 +577,8 @@ func _build_difficulty_screen() -> void:
 		var key = lvl["key"]
 		btn.pressed.connect(func():
 			difficulty_screen.visible = false
-			map_screen.visible        = true
 			mode_selected.emit(true, key)
+			_show_squad_screen()
 		)
 		difficulty_screen.add_child(btn)
 
@@ -596,6 +601,80 @@ func _build_difficulty_screen() -> void:
 		mode_screen.visible       = true
 	)
 	difficulty_screen.add_child(back_btn)
+
+# ── Écran sélection des squads ───────────────────────────────────────────────
+const SQUADS = [
+	"Neon Squad", "Shadow Squad", "Crimson Squad", "Cyber Squad",
+	"Phantom Squad", "Eclipse Squad", "Nova Squad", "Storm Squad"
+]
+
+func _show_squad_screen() -> void:
+	_p1_squad = ""
+	squad_title_label.text = Lang.t("squad_p1")
+	for child in squad_screen.get_children():
+		if child is Button:
+			child.disabled = false
+			child.modulate = Color(1, 1, 1, 1)
+	squad_screen.visible = true
+
+func _build_squad_screen() -> void:
+	squad_screen = Panel.new()
+	squad_screen.position = Vector2(0, 0)
+	squad_screen.size = Vector2(WIN_W, 720)
+	squad_screen.visible = false
+	var bg = StyleBoxFlat.new()
+	bg.bg_color = Color(0.08, 0.04, 0.14)
+	squad_screen.add_theme_stylebox_override("panel", bg)
+	add_child(squad_screen)
+
+	squad_title_label = Label.new()
+	squad_title_label.position = Vector2(0, 130)
+	squad_title_label.size = Vector2(WIN_W, 60)
+	squad_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	squad_title_label.add_theme_font_size_override("font_size", 30)
+	squad_title_label.modulate = Color(1.00, 0.35, 0.75)
+	squad_screen.add_child(squad_title_label)
+
+	var sep = Label.new()
+	sep.text = "────────────────────────────────────────"
+	sep.position = Vector2(0, 198)
+	sep.size = Vector2(WIN_W, 24)
+	sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sep.modulate = Color(0.70, 0.25, 0.55)
+	squad_screen.add_child(sep)
+
+	# 8 boutons en grille 2×4
+	for i in range(SQUADS.size()):
+		var col = i / 4
+		var row = i % 4
+		var btn = Button.new()
+		btn.text = SQUADS[i]
+		btn.position = Vector2(176 + col * 424, 240 + row * 100)
+		btn.size = Vector2(376, 72)
+		btn.add_theme_font_size_override("font_size", 22)
+		var bn = _make_btn_style(Color(0.30, 0.06, 0.20), Color(0.85, 0.25, 0.60))
+		var bh = _make_btn_style(Color(0.50, 0.08, 0.32), Color(1.00, 0.45, 0.80))
+		btn.add_theme_stylebox_override("normal", bn)
+		btn.add_theme_stylebox_override("hover",  bh)
+		var squad_name = SQUADS[i]
+		btn.pressed.connect(func(): _on_squad_picked(squad_name))
+		squad_screen.add_child(btn)
+
+func _on_squad_picked(squad_name: String) -> void:
+	if _p1_squad == "":
+		# Joueur 1 vient de choisir
+		_p1_squad = squad_name
+		squad_title_label.text = Lang.t("squad_p2")
+		# Désactiver le squad déjà pris
+		for child in squad_screen.get_children():
+			if child is Button and child.text == squad_name:
+				child.disabled = true
+				child.modulate = Color(0.5, 0.5, 0.5, 0.6)
+	else:
+		# Joueur 2 vient de choisir
+		squad_screen.visible = false
+		map_screen.visible   = true
+		squads_selected.emit(_p1_squad, squad_name)
 
 # ── Méthodes appelées par Main.gd ────────────────────────────────────────────
 func hide_map_screen() -> void:
