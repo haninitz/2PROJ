@@ -11,8 +11,9 @@ const MAPS = [
 		"camps": [
 			{"name": "Villa Clover",       "pos": Vector2(150, 200),  "owner": 0,  "units": 5, "income": 10},
 			{"name": "Boutique WOOHP",     "pos": Vector2(150, 430),  "owner": 0,  "units": 5, "income": 10},
-			{"name": "Beverly Hills High", "pos": Vector2(440, 310),  "owner": -1, "units": 2, "income": 15},
-			{"name": "Sunset Mall",        "pos": Vector2(710, 310),  "owner": -1, "units": 2, "income": 15},
+			{"name": "Beverly Hills High", "pos": Vector2(440, 170),  "owner": -1, "units": 2, "income": 15},
+			{"name": "Sunset Mall",        "pos": Vector2(440, 460),  "owner": -1, "units": 2, "income": 15},
+			{"name": "Rodeo Drive",        "pos": Vector2(710, 310),  "owner": -1, "units": 3, "income": 20},
 			{"name": "QG de Mandy",        "pos": Vector2(1000, 200), "owner": 1,  "units": 5, "income": 10},
 			{"name": "Repaire LAMOS",      "pos": Vector2(1000, 430), "owner": 1,  "units": 5, "income": 10},
 		],
@@ -76,7 +77,12 @@ const MAPS = [
 			{"name": "Fort Adverse",      "pos": Vector2(1020, 180), "owner": 1,  "units": 5, "income": 10, "type": "normal"},
 			{"name": "Dock Ennemi",       "pos": Vector2(950, 480),  "owner": 1,  "units": 3, "income": 10, "type": "port"},
 		],
-		"forests": [],
+		"forests": [
+			Vector2(75,  160), Vector2(220, 110), Vector2(95,  370), Vector2(225, 450),
+			Vector2(490,  75), Vector2(625,  70), Vector2(555, 160),
+			Vector2(510, 340), Vector2(605, 345), Vector2(555, 440),
+			Vector2(900, 155), Vector2(1055, 110), Vector2(975, 375), Vector2(915, 450),
+		],
 		"river_x": -1,
 		"bridge_y": -1,
 		"bridge_h": 0
@@ -98,16 +104,16 @@ const MAPS = [
 			{"name": "Secteur LAMOS",      "pos": Vector2(1000, 310), "owner": 1,  "units": 5, "income": 10},
 		],
 		"forests": [
-			Vector2(80,  120), Vector2(200, 200), Vector2(80,  320),
-			Vector2(200, 450), Vector2(80,  530),
-			Vector2(350, 80),  Vector2(350, 220), Vector2(350, 390),
-			Vector2(350, 530), Vector2(430, 180), Vector2(430, 460),
-			Vector2(490, 310), Vector2(576, 80),  Vector2(576, 520),
-			Vector2(660, 310), Vector2(720, 80),  Vector2(720, 180),
-			Vector2(720, 460), Vector2(720, 540), Vector2(800, 220),
-			Vector2(800, 410), Vector2(900, 100), Vector2(900, 320),
-			Vector2(900, 530), Vector2(960, 200), Vector2(960, 450),
-			Vector2(1060, 120), Vector2(1060, 530)
+			# Mur nord (couloir supérieur)
+			Vector2(80,  75), Vector2(240,  75), Vector2(470,  75),
+			Vector2(680,  75), Vector2(880,  75), Vector2(1070,  75),
+			# Cloisons verticales hautes
+			Vector2(240, 230), Vector2(470, 230), Vector2(700, 230), Vector2(960, 230),
+			# Cloisons verticales basses
+			Vector2(240, 395), Vector2(470, 395), Vector2(700, 395), Vector2(960, 395),
+			# Mur sud (couloir inférieur)
+			Vector2(80, 550), Vector2(240, 550), Vector2(470, 550),
+			Vector2(680, 550), Vector2(880, 550), Vector2(1070, 550),
 		],
 		"river_x": -1,
 		"bridge_y": -1,
