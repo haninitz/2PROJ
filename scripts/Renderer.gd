@@ -5,16 +5,16 @@ const WIN_W  = 1152
 const MAP_H  = 620
 const CAMP_R = 42.0
 
-const C_P1      = Color(0.22, 0.45, 0.90)
-const C_P2      = Color(0.88, 0.22, 0.22)
-const C_NEUTRAL = Color(0.55, 0.55, 0.55)
-const C_SELECT  = Color(1.00, 0.92, 0.15)
-const C_BG      = Color(0.18, 0.36, 0.18)
-const C_WATER   = Color(0.20, 0.42, 0.80)
-const C_FOREST  = Color(0.10, 0.26, 0.10)
-const C_PANEL   = Color(0.08, 0.08, 0.08)
-const C_GOLD    = Color(1.00, 0.87, 0.30)
-const C_SAND    = Color(0.72, 0.64, 0.44)
+const C_P1      = Color(0.10, 0.78, 0.38)   # Sam — vert vif
+const C_P2      = Color(0.92, 0.12, 0.45)   # Clover — rose fuchsia
+const C_NEUTRAL = Color(0.62, 0.58, 0.72)   # lavande argentée
+const C_SELECT  = Color(1.00, 0.42, 0.80)   # sélection rose
+const C_BG      = Color(0.10, 0.08, 0.18)   # fond violet sombre (base secrète)
+const C_WATER   = Color(0.18, 0.68, 0.88)   # turquoise tropical
+const C_FOREST  = Color(0.08, 0.22, 0.12)   # forêt sombre
+const C_PANEL   = Color(0.08, 0.06, 0.14)   # panneau violet foncé
+const C_GOLD    = Color(1.00, 0.82, 0.25)   # or
+const C_SAND    = Color(0.88, 0.75, 0.58)   # sable tropical
 
 func draw(canvas: Node2D, font: Font, camps: Array, selected_idx: int,
 		forests: Array, river_x: int, bridge_y: int, bridge_h: int,
