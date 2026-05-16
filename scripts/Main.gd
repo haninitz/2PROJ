@@ -19,7 +19,9 @@ var bridge_y:   int   = -1
 var bridge_h:   int   = 0
 var has_water:  bool  = false
 var land_zones: Array = []
-var map_chosen: bool  = false
+var map_chosen:    bool   = false
+var ai_mode:       bool   = false
+var ai_difficulty: String = ""
 
 @onready var ui = $UI
 
@@ -32,6 +34,11 @@ func _ready() -> void:
 	ui.end_turn_pressed.connect(_on_end_turn)
 	ui.recruit_pressed.connect(_on_recruit)
 	ui.map_selected.connect(_on_map_selected)
+	ui.mode_selected.connect(_on_mode_selected)
+
+func _on_mode_selected(is_ai: bool, difficulty: String) -> void:
+	ai_mode       = is_ai
+	ai_difficulty = difficulty
 
 func _on_map_selected(map_index: int) -> void:
 	ui.hide_map_screen()

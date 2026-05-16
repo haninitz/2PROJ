@@ -3,6 +3,7 @@ extends CanvasLayer
 signal end_turn_pressed
 signal recruit_pressed(unit_type: String)
 signal map_selected(map_index: int)
+signal mode_selected(is_ai: bool, difficulty: String)
 
 const WIN_W  = 1152
 const MAP_H  = 620
@@ -23,10 +24,12 @@ var camp_label:   Label
 var recruit_btns: Array = []
 
 # Écrans
-var map_screen:  Panel
-var main_menu:   Panel
-var title_label: Label
-var menu_beams:  Array = []
+var map_screen:        Panel
+var main_menu:         Panel
+var mode_screen:       Panel
+var difficulty_screen: Panel
+var title_label:       Label
+var menu_beams:        Array = []
 
 # Écran victoire/défaite
 var victory_screen:   Panel
@@ -40,6 +43,8 @@ func _ready() -> void:
 	_build_recruit_bar()
 	_build_map_screen()
 	_build_victory_screen()
+	_build_mode_screen()
+	_build_difficulty_screen()
 	_build_main_menu()
 
 # ── Animation du menu principal ──────────────────────────────────────────────
@@ -252,8 +257,8 @@ func _build_main_menu() -> void:
 	play_btn.add_theme_stylebox_override("hover",   ph)
 	play_btn.add_theme_stylebox_override("pressed", pp)
 	play_btn.pressed.connect(func():
-		main_menu.visible = false
-		map_screen.visible = true
+		main_menu.visible  = false
+		mode_screen.visible = true
 	)
 	main_menu.add_child(play_btn)
 
@@ -405,6 +410,169 @@ func _make_btn_style(bg: Color, border: Color) -> StyleBoxFlat:
 	s.set_border_width_all(2)
 	s.set_corner_radius_all(8)
 	return s
+
+# ── Écran sélection du mode (1 joueur / 2 joueurs) ───────────────────────────
+func _build_mode_screen() -> void:
+	mode_screen = Panel.new()
+	mode_screen.position = Vector2(0, 0)
+	mode_screen.size = Vector2(WIN_W, 720)
+	mode_screen.visible = false
+	var bg = StyleBoxFlat.new()
+	bg.bg_color = Color(0.06, 0.11, 0.06)
+	mode_screen.add_theme_stylebox_override("panel", bg)
+	add_child(mode_screen)
+
+	var title = Label.new()
+	title.text = "Mode de jeu"
+	title.position = Vector2(0, 160)
+	title.size = Vector2(WIN_W, 60)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 36)
+	title.modulate = Color(0.90, 0.87, 0.70)
+	mode_screen.add_child(title)
+
+	var sep = Label.new()
+	sep.text = "────────────────────────────────────────"
+	sep.position = Vector2(0, 230)
+	sep.size = Vector2(WIN_W, 24)
+	sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sep.modulate = Color(0.35, 0.55, 0.35)
+	mode_screen.add_child(sep)
+
+	# Bouton 2 joueurs
+	var btn2 = Button.new()
+	btn2.text = "2 Joueurs"
+	btn2.position = Vector2(WIN_W / 2 - 200, 290)
+	btn2.size = Vector2(400, 70)
+	btn2.add_theme_font_size_override("font_size", 24)
+	var n2 = _make_btn_style(Color(0.10, 0.24, 0.10), Color(0.40, 0.65, 0.40))
+	var h2 = _make_btn_style(Color(0.16, 0.38, 0.16), Color(0.70, 0.90, 0.50))
+	btn2.add_theme_stylebox_override("normal", n2)
+	btn2.add_theme_stylebox_override("hover",  h2)
+	btn2.pressed.connect(func():
+		mode_screen.visible = false
+		map_screen.visible  = true
+		mode_selected.emit(false, "")
+	)
+	mode_screen.add_child(btn2)
+
+	var desc2 = Label.new()
+	desc2.text = "Deux joueurs humains sur le même écran"
+	desc2.position = Vector2(0, 370)
+	desc2.size = Vector2(WIN_W, 24)
+	desc2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc2.add_theme_font_size_override("font_size", 14)
+	desc2.modulate = Color(0.55, 0.65, 0.55)
+	mode_screen.add_child(desc2)
+
+	# Bouton 1 joueur vs IA
+	var btn1 = Button.new()
+	btn1.text = "1 Joueur  (vs IA)"
+	btn1.position = Vector2(WIN_W / 2 - 200, 420)
+	btn1.size = Vector2(400, 70)
+	btn1.add_theme_font_size_override("font_size", 24)
+	var n1 = _make_btn_style(Color(0.20, 0.12, 0.05), Color(0.80, 0.55, 0.20))
+	var h1 = _make_btn_style(Color(0.34, 0.20, 0.06), Color(1.00, 0.75, 0.30))
+	btn1.add_theme_stylebox_override("normal", n1)
+	btn1.add_theme_stylebox_override("hover",  h1)
+	btn1.pressed.connect(func():
+		mode_screen.visible       = false
+		difficulty_screen.visible = true
+	)
+	mode_screen.add_child(btn1)
+
+	var desc1 = Label.new()
+	desc1.text = "Jouez contre une intelligence artificielle"
+	desc1.position = Vector2(0, 500)
+	desc1.size = Vector2(WIN_W, 24)
+	desc1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc1.add_theme_font_size_override("font_size", 14)
+	desc1.modulate = Color(0.55, 0.65, 0.55)
+	mode_screen.add_child(desc1)
+
+	var back_btn = Button.new()
+	back_btn.text = "← Retour"
+	back_btn.position = Vector2(30, 660)
+	back_btn.size = Vector2(160, 40)
+	back_btn.add_theme_font_size_override("font_size", 16)
+	back_btn.pressed.connect(func():
+		mode_screen.visible = false
+		main_menu.visible   = true
+	)
+	mode_screen.add_child(back_btn)
+
+# ── Écran sélection de la difficulté IA ──────────────────────────────────────
+func _build_difficulty_screen() -> void:
+	difficulty_screen = Panel.new()
+	difficulty_screen.position = Vector2(0, 0)
+	difficulty_screen.size = Vector2(WIN_W, 720)
+	difficulty_screen.visible = false
+	var bg = StyleBoxFlat.new()
+	bg.bg_color = Color(0.06, 0.08, 0.12)
+	difficulty_screen.add_theme_stylebox_override("panel", bg)
+	add_child(difficulty_screen)
+
+	var title = Label.new()
+	title.text = "Difficulté de l'IA"
+	title.position = Vector2(0, 160)
+	title.size = Vector2(WIN_W, 60)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 36)
+	title.modulate = Color(0.70, 0.87, 1.00)
+	difficulty_screen.add_child(title)
+
+	var sep = Label.new()
+	sep.text = "────────────────────────────────────────"
+	sep.position = Vector2(0, 230)
+	sep.size = Vector2(WIN_W, 24)
+	sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sep.modulate = Color(0.30, 0.45, 0.65)
+	difficulty_screen.add_child(sep)
+
+	var levels = [
+		{"label": "Facile",   "key": "easy",   "desc": "L'IA attaque rarement et recrute peu",          "col_n": Color(0.08, 0.22, 0.08), "col_h": Color(0.14, 0.36, 0.14), "border_n": Color(0.35, 0.70, 0.35), "border_h": Color(0.55, 0.90, 0.55)},
+		{"label": "Moyen",    "key": "medium", "desc": "L'IA gère ses troupes et sait attaquer",        "col_n": Color(0.18, 0.14, 0.04), "col_h": Color(0.30, 0.22, 0.06), "border_n": Color(0.80, 0.65, 0.20), "border_h": Color(1.00, 0.85, 0.30)},
+		{"label": "Difficile","key": "hard",   "desc": "L'IA est agressive et optimise ses revenus",    "col_n": Color(0.22, 0.06, 0.06), "col_h": Color(0.36, 0.10, 0.10), "border_n": Color(0.80, 0.25, 0.25), "border_h": Color(1.00, 0.35, 0.35)},
+	]
+
+	for i in range(levels.size()):
+		var lvl = levels[i]
+		var btn = Button.new()
+		btn.text = lvl["label"]
+		btn.position = Vector2(WIN_W / 2 - 200, 280 + i * 110)
+		btn.size = Vector2(400, 70)
+		btn.add_theme_font_size_override("font_size", 26)
+		var bn = _make_btn_style(lvl["col_n"], lvl["border_n"])
+		var bh = _make_btn_style(lvl["col_h"], lvl["border_h"])
+		btn.add_theme_stylebox_override("normal", bn)
+		btn.add_theme_stylebox_override("hover",  bh)
+		var key = lvl["key"]
+		btn.pressed.connect(func():
+			difficulty_screen.visible = false
+			map_screen.visible        = true
+			mode_selected.emit(true, key)
+		)
+		difficulty_screen.add_child(btn)
+
+		var desc = Label.new()
+		desc.text = lvl["desc"]
+		desc.position = Vector2(0, 358 + i * 110)
+		desc.size = Vector2(WIN_W, 22)
+		desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc.add_theme_font_size_override("font_size", 13)
+		desc.modulate = Color(0.55, 0.65, 0.75)
+		difficulty_screen.add_child(desc)
+
+	var back_btn = Button.new()
+	back_btn.text = "← Retour"
+	back_btn.position = Vector2(30, 660)
+	back_btn.size = Vector2(160, 40)
+	back_btn.add_theme_font_size_override("font_size", 16)
+	back_btn.pressed.connect(func():
+		difficulty_screen.visible = false
+		mode_screen.visible       = true
+	)
+	difficulty_screen.add_child(back_btn)
 
 # ── Méthodes appelées par Main.gd ────────────────────────────────────────────
 func hide_map_screen() -> void:
