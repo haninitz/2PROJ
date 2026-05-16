@@ -45,10 +45,10 @@ func _on_map_selected(map_index: int) -> void:
 	map_chosen = true
 	_init_data(map_index)
 	_collect_income(0)
-	message = "Joueur 1 — Sélectionnez un de vos camps"
+	message = Lang.t("msg_select") % players[0].name
 
 func _init_data(map_index: int) -> void:
-	players = [Player.new("Joueur 1"), Player.new("Joueur 2")]
+	players = [Player.new(Lang.t("player1")), Player.new(Lang.t("player2"))]
 
 	var map = MapDefs.MAPS[map_index]
 	forests    = map["forests"]
@@ -103,17 +103,17 @@ func _handle_click(pos: Vector2) -> void:
 	if clicked == -1:
 		selected_idx = -1
 		ui.hide_recruit()
-		message = "%s — Sélectionnez un de vos camps" % players[current_player].name
+		message = Lang.t("msg_select") % players[current_player].name
 		return
 
 	if selected_idx == -1:
 		if camps[clicked].owner == current_player:
 			selected_idx = clicked
 			ui.show_recruit(camps[clicked])
-			message = "%s sélectionné — Cliquez une cible ou recrutez" % camps[clicked].name
+			message = Lang.t("msg_selected") % camps[clicked].name
 			Sound.play("select")
 		else:
-			message = "Ce camp ne vous appartient pas !"
+			message = Lang.t("msg_not_yours")
 	else:
 		if clicked == selected_idx:
 			selected_idx = -1
@@ -131,35 +131,35 @@ func _handle_click(pos: Vector2) -> void:
 # ── Actions du joueur ────────────────────────────────────────────────────────
 func _move_units(src: int, tgt: int) -> void:
 	if camps[src].units <= 1:
-		message = "Il faut au moins 2 unités pour se déplacer !"
+		message = Lang.t("msg_need_move")
 		return
 	var n = camps[src].units - 1
 	camps[tgt].units += n
 	camps[src].units = 1
-	message = "%d unités déplacées vers %s" % [n, camps[tgt].name]
+	message = Lang.t("msg_move") % [n, camps[tgt].name]
 	Sound.play("move")
 
 func _attack(src: int, tgt: int) -> void:
 	if camps[src].units <= 1:
-		message = "Il faut au moins 2 unités pour attaquer !"
+		message = Lang.t("msg_need_atk")
 		return
 	Combat.resolve(camps[src], camps[tgt])
-	message = "Attaque sur %s !" % camps[tgt].name
+	message = Lang.t("msg_attack") % camps[tgt].name
 	Sound.play("attack")
 
 func _produce_unit() -> void:
 	if selected_idx == -1:
-		message = "Sélectionnez d'abord un camp !"
+		message = Lang.t("msg_no_camp")
 		return
 	if camps[selected_idx].owner != current_player:
 		return
 	var p: Player = players[current_player]
 	if p.gold < 10:
-		message = "Pas assez d'or ! (10 or requis)"
+		message = Lang.t("msg_no_gold")
 		return
 	p.gold -= 10
 	camps[selected_idx].units += 1
-	message = "Unité produite à %s" % camps[selected_idx].name
+	message = Lang.t("msg_produced") % camps[selected_idx].name
 
 func _on_recruit(unit_type: String) -> void:
 	if selected_idx == -1:
@@ -168,17 +168,17 @@ func _on_recruit(unit_type: String) -> void:
 	if camp.owner != current_player:
 		return
 	if camp.queue.size() >= 3:
-		message = "File pleine ! (3 unités maximum en attente)"
+		message = Lang.t("msg_queue_full")
 		return
 	var price = UnitDefs.TYPES[unit_type]["price"]
 	var p: Player = players[current_player]
 	if p.gold < price:
-		message = "Pas assez d'or ! (%d or requis)" % price
+		message = Lang.t("msg_no_gold_p") % price
 		return
 	p.gold -= price
 	camp.queue.append(unit_type)
 	ui.show_recruit(camp)
-	message = "%s ajouté à la file de %s" % [UnitDefs.TYPES[unit_type]["label"], camp.name]
+	message = Lang.t("msg_recruited") % [UnitDefs.TYPES[unit_type]["label"], camp.name]
 	Sound.play("recruit")
 
 # ── Fin de tour ──────────────────────────────────────────────────────────────
@@ -191,7 +191,7 @@ func _on_end_turn() -> void:
 	if current_player == 0:
 		turn += 1
 	_collect_income(current_player)
-	message = "%s — Sélectionnez un de vos camps" % players[current_player].name
+	message = Lang.t("msg_select") % players[current_player].name
 	_check_victory()
 
 func _process_queues(p: int) -> void:
@@ -223,7 +223,7 @@ func _check_victory() -> void:
 func _end_game(w: String) -> void:
 	game_over = true
 	winner    = w
-	message   = "VICTOIRE DE %s !" % w.to_upper()
+	message   = Lang.t("msg_victory") % w.to_upper()
 	ui.disable_end_btn()
 	ui.show_victory(w, turn)
 	Sound.play("victory")

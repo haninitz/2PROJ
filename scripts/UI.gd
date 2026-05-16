@@ -112,7 +112,7 @@ func _build_hud() -> void:
 	add_child(unit_label)
 
 	end_btn = Button.new()
-	end_btn.text = "Fin de tour"
+	end_btn.text = Lang.t("end_turn")
 	end_btn.position = Vector2(WIN_W - 185, MAP_H + 28)
 	end_btn.size = Vector2(165, 44)
 	end_btn.pressed.connect(func(): end_turn_pressed.emit())
@@ -156,7 +156,7 @@ func _build_map_screen() -> void:
 	add_child(map_screen)
 
 	var title = Label.new()
-	title.text = "Choisissez une carte"
+	title.text = Lang.t("map_title")
 	title.position = Vector2(0, 160)
 	title.size = Vector2(WIN_W, 60)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -187,7 +187,7 @@ func _build_map_screen() -> void:
 		map_screen.add_child(btn)
 
 	var back_btn = Button.new()
-	back_btn.text = "← Retour"
+	back_btn.text = Lang.t("back")
 	back_btn.position = Vector2(30, 660)
 	back_btn.size = Vector2(160, 40)
 	back_btn.add_theme_font_size_override("font_size", 16)
@@ -235,7 +235,7 @@ func _build_main_menu() -> void:
 
 	# sous-titre
 	var sub = Label.new()
-	sub.text = "Stratégie & Conquête  •  Totally Spies"
+	sub.text = Lang.t("subtitle")
 	sub.position = Vector2(0, 308)
 	sub.size = Vector2(WIN_W, 32)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -245,7 +245,7 @@ func _build_main_menu() -> void:
 
 	# bouton JOUER
 	var play_btn = Button.new()
-	play_btn.text = "JOUER"
+	play_btn.text = Lang.t("play")
 	play_btn.position = Vector2(WIN_W / 2 - 160, 390)
 	play_btn.size = Vector2(320, 70)
 	play_btn.add_theme_font_size_override("font_size", 28)
@@ -264,7 +264,7 @@ func _build_main_menu() -> void:
 
 	# bouton Quitter
 	var quit_btn = Button.new()
-	quit_btn.text = "Quitter"
+	quit_btn.text = Lang.t("quit")
 	quit_btn.position = Vector2(WIN_W / 2 - 110, 478)
 	quit_btn.size = Vector2(220, 46)
 	quit_btn.add_theme_font_size_override("font_size", 17)
@@ -277,13 +277,36 @@ func _build_main_menu() -> void:
 
 	# pied de page
 	var footer = Label.new()
-	footer.text = "Projet 2PROJ — SUPINFO Paris"
+	footer.text = Lang.t("footer")
 	footer.position = Vector2(0, 688)
 	footer.size = Vector2(WIN_W, 24)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer.add_theme_font_size_override("font_size", 13)
 	footer.modulate = Color(0.55, 0.40, 0.65)
 	main_menu.add_child(footer)
+
+	# Boutons de langue FR / EN / ES
+	var langs = ["fr", "en", "es"]
+	var labels = ["FR", "EN", "ES"]
+	for i in range(langs.size()):
+		var lb = Button.new()
+		lb.text = labels[i]
+		lb.position = Vector2(WIN_W - 185 + i * 62, 18)
+		lb.size = Vector2(52, 34)
+		lb.add_theme_font_size_override("font_size", 14)
+		var is_active = langs[i] == Lang.current
+		var ln = _make_btn_style(
+			Color(0.40, 0.08, 0.28) if is_active else Color(0.18, 0.06, 0.14),
+			Color(1.00, 0.45, 0.80) if is_active else Color(0.55, 0.25, 0.45)
+		)
+		lb.add_theme_stylebox_override("normal", ln)
+		lb.add_theme_stylebox_override("hover",  _make_btn_style(Color(0.55, 0.10, 0.36), Color(1.00, 0.55, 0.88)))
+		var lang_code = langs[i]
+		lb.pressed.connect(func():
+			Lang.current = lang_code
+			get_tree().reload_current_scene()
+		)
+		main_menu.add_child(lb)
 
 # ── Écran victoire / défaite ─────────────────────────────────────────────────
 func _build_victory_screen() -> void:
@@ -310,7 +333,7 @@ func _build_victory_screen() -> void:
 
 	# titre "VICTOIRE !"
 	victory_title = Label.new()
-	victory_title.text = "VICTOIRE !"
+	victory_title.text = Lang.t("victory_title")
 	victory_title.position = Vector2(WIN_W / 2 - 340, 180)
 	victory_title.size = Vector2(680, 90)
 	victory_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -338,7 +361,7 @@ func _build_victory_screen() -> void:
 
 	# ligne "a conquis la carte"
 	var sub = Label.new()
-	sub.text = "a remporté la conquête !"
+	sub.text = Lang.t("victory_sub")
 	sub.position = Vector2(WIN_W / 2 - 340, 372)
 	sub.size = Vector2(680, 30)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -358,7 +381,7 @@ func _build_victory_screen() -> void:
 
 	# bouton REJOUER
 	var replay_btn = Button.new()
-	replay_btn.text = "REJOUER"
+	replay_btn.text = Lang.t("replay")
 	replay_btn.position = Vector2(WIN_W / 2 - 230, 462)
 	replay_btn.size = Vector2(200, 58)
 	replay_btn.add_theme_font_size_override("font_size", 22)
@@ -399,7 +422,7 @@ func show_victory(winner: String, turns: int) -> void:
 	victory_winner.modulate = col
 	var turns_lbl = victory_screen.get_node("TurnsLabel") as Label
 	if turns_lbl:
-		turns_lbl.text = "Partie terminée en %d tours" % turns
+		turns_lbl.text = Lang.t("victory_turns") % turns
 	victory_screen.visible = true
 
 # ── Utilitaire style bouton ───────────────────────────────────────────────────
@@ -423,7 +446,7 @@ func _build_mode_screen() -> void:
 	add_child(mode_screen)
 
 	var title = Label.new()
-	title.text = "Mode de jeu"
+	title.text = Lang.t("mode_title")
 	title.position = Vector2(0, 160)
 	title.size = Vector2(WIN_W, 60)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -441,7 +464,7 @@ func _build_mode_screen() -> void:
 
 	# Bouton 2 joueurs
 	var btn2 = Button.new()
-	btn2.text = "2 Joueurs"
+	btn2.text = Lang.t("mode_2p")
 	btn2.position = Vector2(WIN_W / 2 - 200, 290)
 	btn2.size = Vector2(400, 70)
 	btn2.add_theme_font_size_override("font_size", 24)
@@ -457,7 +480,7 @@ func _build_mode_screen() -> void:
 	mode_screen.add_child(btn2)
 
 	var desc2 = Label.new()
-	desc2.text = "Deux joueurs humains sur le même écran"
+	desc2.text = Lang.t("mode_2p_desc")
 	desc2.position = Vector2(0, 370)
 	desc2.size = Vector2(WIN_W, 24)
 	desc2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -467,7 +490,7 @@ func _build_mode_screen() -> void:
 
 	# Bouton 1 joueur vs IA
 	var btn1 = Button.new()
-	btn1.text = "1 Joueur  (vs IA)"
+	btn1.text = Lang.t("mode_1p")
 	btn1.position = Vector2(WIN_W / 2 - 200, 420)
 	btn1.size = Vector2(400, 70)
 	btn1.add_theme_font_size_override("font_size", 24)
@@ -482,7 +505,7 @@ func _build_mode_screen() -> void:
 	mode_screen.add_child(btn1)
 
 	var desc1 = Label.new()
-	desc1.text = "Jouez contre une intelligence artificielle"
+	desc1.text = Lang.t("mode_1p_desc")
 	desc1.position = Vector2(0, 500)
 	desc1.size = Vector2(WIN_W, 24)
 	desc1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -491,7 +514,7 @@ func _build_mode_screen() -> void:
 	mode_screen.add_child(desc1)
 
 	var back_btn = Button.new()
-	back_btn.text = "← Retour"
+	back_btn.text = Lang.t("back")
 	back_btn.position = Vector2(30, 660)
 	back_btn.size = Vector2(160, 40)
 	back_btn.add_theme_font_size_override("font_size", 16)
@@ -513,7 +536,7 @@ func _build_difficulty_screen() -> void:
 	add_child(difficulty_screen)
 
 	var title = Label.new()
-	title.text = "Difficulté de l'IA"
+	title.text = Lang.t("diff_title")
 	title.position = Vector2(0, 160)
 	title.size = Vector2(WIN_W, 60)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -530,9 +553,9 @@ func _build_difficulty_screen() -> void:
 	difficulty_screen.add_child(sep)
 
 	var levels = [
-		{"label": "Facile",    "key": "easy",   "desc": "L'IA attaque rarement et recrute peu",       "col_n": Color(0.06, 0.28, 0.16), "col_h": Color(0.10, 0.45, 0.25), "border_n": Color(0.10, 0.78, 0.38), "border_h": Color(0.30, 1.00, 0.55)},
-		{"label": "Moyen",     "key": "medium", "desc": "L'IA gère ses troupes et sait attaquer",     "col_n": Color(0.30, 0.06, 0.20), "col_h": Color(0.50, 0.08, 0.32), "border_n": Color(1.00, 0.35, 0.75), "border_h": Color(1.00, 0.55, 0.88)},
-		{"label": "Difficile", "key": "hard",   "desc": "L'IA est agressive et optimise ses revenus", "col_n": Color(0.22, 0.06, 0.06), "col_h": Color(0.36, 0.10, 0.10), "border_n": Color(0.90, 0.20, 0.20), "border_h": Color(1.00, 0.35, 0.35)},
+		{"label": Lang.t("diff_easy"), "key": "easy",   "desc": Lang.t("diff_easy_desc"), "col_n": Color(0.06, 0.28, 0.16), "col_h": Color(0.10, 0.45, 0.25), "border_n": Color(0.10, 0.78, 0.38), "border_h": Color(0.30, 1.00, 0.55)},
+		{"label": Lang.t("diff_med"),  "key": "medium", "desc": Lang.t("diff_med_desc"),  "col_n": Color(0.30, 0.06, 0.20), "col_h": Color(0.50, 0.08, 0.32), "border_n": Color(1.00, 0.35, 0.75), "border_h": Color(1.00, 0.55, 0.88)},
+		{"label": Lang.t("diff_hard"), "key": "hard",   "desc": Lang.t("diff_hard_desc"), "col_n": Color(0.22, 0.06, 0.06), "col_h": Color(0.36, 0.10, 0.10), "border_n": Color(0.90, 0.20, 0.20), "border_h": Color(1.00, 0.35, 0.35)},
 	]
 
 	for i in range(levels.size()):
@@ -564,7 +587,7 @@ func _build_difficulty_screen() -> void:
 		difficulty_screen.add_child(desc)
 
 	var back_btn = Button.new()
-	back_btn.text = "← Retour"
+	back_btn.text = Lang.t("back")
 	back_btn.position = Vector2(30, 660)
 	back_btn.size = Vector2(160, 40)
 	back_btn.add_theme_font_size_override("font_size", 16)
@@ -580,27 +603,27 @@ func hide_map_screen() -> void:
 
 func update_hud(player_name: String, turn: int, gold: int, income: int, camps_owned: int, selected_unit: String, msg: String, p_index: int) -> void:
 	var color = Color(0.10, 0.78, 0.38) if p_index == 0 else Color(0.92, 0.12, 0.45)
-	info_label.text = "%s — Tour %d" % [player_name, turn]
+	info_label.text = Lang.t("player_turn") % [player_name, turn]
 	info_label.modulate = color
-	gold_label.text = "Or : %d" % gold
-	income_label.text = "+%d /tour" % income
-	camps_label.text = "Camps : %d" % camps_owned
+	gold_label.text = Lang.t("gold") % gold
+	income_label.text = Lang.t("income") % income
+	camps_label.text = Lang.t("camps") % camps_owned
 	msg_label.text = msg
 	if selected_unit != "":
-		unit_label.text = "Unité : %s" % selected_unit
+		unit_label.text = Lang.t("unit_label") % selected_unit
 		unit_label.visible = true
 	else:
 		unit_label.visible = false
 
 func show_recruit(camp: Camp) -> void:
 	var stats = UnitDefs.TYPES[camp.unit_type]
-	var q_text = "vide"
+	var q_text = Lang.t("queue_empty")
 	if camp.queue.size() > 0:
 		var parts = []
 		for t in camp.queue:
 			parts.append(UnitDefs.TYPES[t]["label"])
 		q_text = "  →  ".join(parts)
-	camp_label.text = "%s  |  Type : %s  |  File : %s" % [camp.name, stats["label"], q_text]
+	camp_label.text = "%s  |  %s : %s  |  %s : %s" % [camp.name, Lang.t("queue_type"), stats["label"], Lang.t("queue_label"), q_text]
 	msg_label.visible    = false
 	info_label.visible   = false
 	gold_label.visible   = false
