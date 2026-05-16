@@ -19,6 +19,7 @@ var bridge_y:   int   = -1
 var bridge_h:   int   = 0
 var has_water:  bool  = false
 var land_zones: Array = []
+var regions:       Array = []
 var map_chosen:    bool   = false
 var ai_mode:       bool   = false
 var ai_difficulty: String = ""
@@ -67,6 +68,7 @@ func _init_data(map_index: int) -> void:
 	bridge_h   = map["bridge_h"]
 	has_water  = map["has_water"]
 	land_zones = map["land_zones"]
+	regions    = map["regions"]
 
 	camps = []
 	for data in map["camps"]:
@@ -82,6 +84,9 @@ func _process(_delta: float) -> void:
 			if camp.owner == current_player:
 				income += camp.income
 				camps_owned += 1
+		for region in regions:
+			if _region_owner(region) == current_player:
+				income += region["bonus"]
 		var selected_unit = ""
 		if selected_idx != -1:
 			selected_unit = UnitDefs.TYPES[camps[selected_idx].unit_type]["label"]
@@ -94,7 +99,7 @@ func _draw() -> void:
 		return
 	_renderer.draw(self, font, camps, selected_idx,
 		forests, river_x, bridge_y, bridge_h,
-		has_water, land_zones, game_over, winner)
+		has_water, land_zones, regions, game_over, winner)
 
 # ── Entrées ──────────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
@@ -220,6 +225,16 @@ func _collect_income(p: int) -> void:
 	for camp in camps:
 		if camp.owner == p:
 			player.gold += camp.income
+	for region in regions:
+		if _region_owner(region) == p:
+			player.gold += region["bonus"]
+
+func _region_owner(region: Dictionary) -> int:
+	var owner = camps[region["camps"][0]].owner
+	for idx in region["camps"]:
+		if camps[idx].owner != owner:
+			return -1
+	return owner
 
 func _on_turn_confirmed() -> void:
 	pass

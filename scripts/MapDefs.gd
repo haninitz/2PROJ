@@ -23,7 +23,12 @@ const MAPS = [
 		],
 		"river_x": 576,
 		"bridge_y": 258,
-		"bridge_h": 92
+		"bridge_h": 92,
+		"regions": [
+			{"name": "Quartier Ouest", "camps": [0, 1],    "bonus": 10},
+			{"name": "Centre-Ville",   "camps": [2, 3, 4], "bonus": 15},
+			{"name": "Quartier Est",   "camps": [5, 6],    "bonus": 10},
+		]
 	},
 
 	# ── Carte 2 : La Jungle Techno de Sam ────────────────────────────────────
@@ -55,7 +60,12 @@ const MAPS = [
 		],
 		"river_x": -1,
 		"bridge_y": -1,
-		"bridge_h": 0
+		"bridge_h": 0,
+		"regions": [
+			{"name": "Secteur Ouest", "camps": [0, 1, 2], "bonus": 15},
+			{"name": "Cœur Techno",   "camps": [3],       "bonus": 10},
+			{"name": "Secteur Est",   "camps": [4, 5, 6], "bonus": 15},
+		]
 	},
 
 	# ── Carte 3 : L'Île d'Alex ────────────────────────────────────────────────
@@ -85,7 +95,12 @@ const MAPS = [
 		],
 		"river_x": -1,
 		"bridge_y": -1,
-		"bridge_h": 0
+		"bridge_h": 0,
+		"regions": [
+			{"name": "Île Ouest",      "camps": [0, 1], "bonus": 10},
+			{"name": "Îles Centrales", "camps": [2, 3], "bonus": 15},
+			{"name": "Île Est",        "camps": [4, 5], "bonus": 10},
+		]
 	},
 
 	# ── Carte 4 : Opération WOOHP — Le QG de Jerry ───────────────────────────
@@ -117,6 +132,11 @@ const MAPS = [
 		],
 		"river_x": -1,
 		"bridge_y": -1,
-		"bridge_h": 0
+		"bridge_h": 0,
+		"regions": [
+			{"name": "Aile WOOHP",   "camps": [0, 1, 2], "bonus": 15},
+			{"name": "Commandement", "camps": [3],        "bonus": 10},
+			{"name": "Aile LAMOS",   "camps": [4, 5, 6],  "bonus": 15},
+		]
 	}
 ]

@@ -18,7 +18,7 @@ const C_SAND    = Color(0.88, 0.75, 0.58)   # sable tropical
 
 func draw(canvas: Node2D, font: Font, camps: Array, selected_idx: int,
 		forests: Array, river_x: int, bridge_y: int, bridge_h: int,
-		has_water: bool, land_zones: Array,
+		has_water: bool, land_zones: Array, regions: Array,
 		game_over: bool, winner: String) -> void:
 
 	var t = Time.get_ticks_msec() / 1000.0
@@ -45,6 +45,8 @@ func draw(canvas: Node2D, font: Font, camps: Array, selected_idx: int,
 
 	for fp in forests:
 		_draw_forest(canvas, fp, t)
+
+	_draw_regions(canvas, font, camps, regions)
 
 	_draw_birds(canvas, t)
 
@@ -228,3 +230,51 @@ func _owner_color(owner: int) -> Color:
 		0: return C_P1
 		1: return C_P2
 	return C_NEUTRAL
+
+# ── Régions ───────────────────────────────────────────────────────────────────
+func _region_owner(region: Dictionary, camps: Array) -> int:
+	var owner = camps[region["camps"][0]].owner
+	for idx in region["camps"]:
+		if camps[idx].owner != owner:
+			return -1
+	return owner
+
+func _draw_regions(canvas: Node2D, font: Font, camps: Array, regions: Array) -> void:
+	for region in regions:
+		var min_x = INF;  var max_x = -INF
+		var min_y = INF;  var max_y = -INF
+		for idx in region["camps"]:
+			var pos = camps[idx].pos
+			min_x = min(min_x, pos.x)
+			max_x = max(max_x, pos.x)
+			min_y = min(min_y, pos.y)
+			max_y = max(max_y, pos.y)
+
+		var pad  = 62.0
+		var rx   = min_x - pad
+		var ry   = min_y - pad
+		var rw   = max_x - min_x + pad * 2.0
+		var rh   = max_y - min_y + pad * 2.0
+		var rect = Rect2(rx, ry, rw, rh)
+
+		var owner = _region_owner(region, camps)
+		var fill_col   = Color(0.50, 0.50, 0.60, 0.08)
+		var border_col = Color(0.50, 0.50, 0.60, 0.22)
+		var text_col   = Color(0.80, 0.80, 0.90, 0.55)
+		if owner == 0:
+			fill_col   = Color(C_P1.r, C_P1.g, C_P1.b, 0.10)
+			border_col = Color(C_P1.r, C_P1.g, C_P1.b, 0.40)
+			text_col   = Color(C_P1.r, C_P1.g, C_P1.b, 0.85)
+		elif owner == 1:
+			fill_col   = Color(C_P2.r, C_P2.g, C_P2.b, 0.10)
+			border_col = Color(C_P2.r, C_P2.g, C_P2.b, 0.40)
+			text_col   = Color(C_P2.r, C_P2.g, C_P2.b, 0.85)
+
+		canvas.draw_rect(rect, fill_col)
+		canvas.draw_rect(rect, border_col, false, 2.0)
+
+		var cx = rx + rw / 2.0
+		canvas.draw_string(font, Vector2(cx - 90, ry + 15),
+			region["name"], HORIZONTAL_ALIGNMENT_CENTER, 180, 11, text_col)
+		canvas.draw_string(font, Vector2(cx - 60, ry + rh - 5),
+			"+%d or bonus" % region["bonus"], HORIZONTAL_ALIGNMENT_CENTER, 120, 10, C_GOLD)
