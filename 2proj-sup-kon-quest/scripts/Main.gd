@@ -235,7 +235,8 @@ func _end_game(w: String) -> void:
 	winner    = w
 	message   = Lang.t("msg_victory") % w.to_upper()
 	ui.disable_end_btn()
-	ui.show_victory(w, turn)
+	var winner_idx = 0 if w == players[0].name else 1
+	ui.show_victory(w, turn, winner_idx)
 	Sound.play("victory")
 
 # ── Utilitaires ──────────────────────────────────────────────────────────────

@@ -33,6 +33,7 @@ var difficulty_screen: Panel
 var squad_screen:      Panel
 var squad_title_label: Label
 var _p1_squad:         String = ""
+var _squad_prev_screen: Panel  = null
 var turn_screen:       Panel
 var turn_name_label:   Label
 var turn_num_label:    Label
@@ -406,7 +407,7 @@ func _build_victory_screen() -> void:
 
 	# bouton QUITTER
 	var quit_btn = Button.new()
-	quit_btn.text = "Quitter"
+	quit_btn.text = Lang.t("quit")
 	quit_btn.position = Vector2(WIN_W / 2 + 30, 462)
 	quit_btn.size = Vector2(200, 58)
 	quit_btn.add_theme_font_size_override("font_size", 22)
@@ -426,9 +427,8 @@ func _build_victory_screen() -> void:
 		victory_screen.add_child(star)
 		victory_sparkles.append(star)
 
-func show_victory(winner: String, turns: int) -> void:
-	var is_p1 = "1" in winner
-	var col = Color(0.10, 0.78, 0.38) if is_p1 else Color(0.92, 0.12, 0.45)
+func show_victory(winner: String, turns: int, winner_idx: int = 0) -> void:
+	var col = Color(0.10, 0.78, 0.38) if winner_idx == 0 else Color(0.92, 0.12, 0.45)
 	victory_winner.text = winner
 	victory_winner.modulate = col
 	var turns_lbl = victory_screen.get_node("TurnsLabel") as Label
@@ -486,7 +486,7 @@ func _build_mode_screen() -> void:
 	btn2.pressed.connect(func():
 		mode_screen.visible = false
 		mode_selected.emit(false, "")
-		_show_squad_screen()
+		_show_squad_screen(mode_screen)
 	)
 	mode_screen.add_child(btn2)
 
@@ -584,7 +584,7 @@ func _build_difficulty_screen() -> void:
 		btn.pressed.connect(func():
 			difficulty_screen.visible = false
 			mode_selected.emit(true, key)
-			_show_squad_screen()
+			_show_squad_screen(difficulty_screen)
 		)
 		difficulty_screen.add_child(btn)
 
@@ -614,8 +614,9 @@ const SQUADS = [
 	"Phantom Squad", "Eclipse Squad", "Nova Squad", "Storm Squad"
 ]
 
-func _show_squad_screen() -> void:
+func _show_squad_screen(prev_screen: Panel = null) -> void:
 	_p1_squad = ""
+	_squad_prev_screen = prev_screen
 	squad_title_label.text = Lang.t("squad_p1")
 	for child in squad_screen.get_children():
 		if child is Button:
@@ -648,6 +649,20 @@ func _build_squad_screen() -> void:
 	sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sep.modulate = Color(0.70, 0.25, 0.55)
 	squad_screen.add_child(sep)
+
+	var back_btn = Button.new()
+	back_btn.text = Lang.t("back")
+	back_btn.position = Vector2(30, 660)
+	back_btn.size = Vector2(160, 40)
+	back_btn.add_theme_font_size_override("font_size", 16)
+	back_btn.pressed.connect(func():
+		squad_screen.visible = false
+		if _squad_prev_screen != null:
+			_squad_prev_screen.visible = true
+		else:
+			main_menu.visible = true
+	)
+	squad_screen.add_child(back_btn)
 
 	# 8 boutons en grille 2×4
 	for i in range(SQUADS.size()):
