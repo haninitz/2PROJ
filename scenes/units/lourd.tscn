@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cktqll7de3fnu"]
 
-[ext_resource type="Script" uid="uid://dwt2r1lyyj1b2" path="res://scripts/units/Lourd.gd" id="1_y6v74"]
+[ext_resource type="Script" uid="uid://v1nkea6gr4f8" path="res://scripts/units/Lourd.gd" id="1_y6v74"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ar1t5"]
 
@@ -8,12 +8,12 @@
 radius = 80.0
 
 [node name="Lourd" type="CharacterBody2D" unique_id=874923009]
+script = ExtResource("1_y6v74")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=59944404]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=419519522]
 shape = SubResource("CapsuleShape2D_ar1t5")
-script = ExtResource("1_y6v74")
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=175469356]
 
