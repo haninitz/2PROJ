@@ -24,14 +24,15 @@ func _ready() -> void:
 	NetworkManager.player_disconnected.connect(func(_id): _refresh_slots())
 
 	if GameConfig.is_host:
-		# join_room_local() a déjà rempli GameConfig.players avant ce _ready
-		# → on affiche directement, pas besoin d'attendre
+		# L'hôte est déjà dans la room via join_room_local() → on affiche directement
 		_refresh_slots()
 		var current: int = GameConfig.players.size()
 		var total:   int = GameConfig.get_max_players()
 		status_label.text = " En attente des joueurs… %d/%d" % [current, total]
 	else:
-		status_label.text = " Connexion à la room..."
+		# Le client envoie sa demande de rejoindre après un court délai
+		# (pour laisser le temps à la connexion ENet de s'établir)
+		status_label.text = " Connexion à la room…"
 		await get_tree().create_timer(0.5).timeout
 		RoomManager.request_join_room.rpc_id(1,
 			GameConfig.room_name,
@@ -58,20 +59,20 @@ func _on_list_updated(_rid: String, _data: Array) -> void:
 	if GameConfig.is_host:
 		btn_lancer.disabled = current < total
 		status_label.text = \
-			"✅ Tout le monde est là — lance la partie !" \
+			" Tout le monde est là — lance la partie !" \
 			if not btn_lancer.disabled \
-			else "⏳ En attente des joueurs… %d/%d" % [current, total]
+			else " En attente des joueurs… %d/%d" % [current, total]
 	else:
-		status_label.text = "⏳ En attente du lancement… %d/%d" % [current, total]
+		status_label.text = " En attente du lancement… %d/%d" % [current, total]
 
 func _on_room_full(_rid: String) -> void:
-	status_label.text = "Room pleine !"
+	status_label.text = " Room pleine !"
 
 func _refresh_slots() -> void:
 	for c in slots_a.get_children(): c.queue_free()
 	for c in slots_b.get_children(): c.queue_free()
 
-	var per_team: int = GameConfig.get_players_per_team()
+	var per_team:    int   = GameConfig.get_players_per_team()
 	var all_players: Array = GameConfig.players.values()
 	all_players.sort_custom(func(a, b): return a.join_order < b.join_order)
 	var team_a: Array = all_players.filter(func(p): return p.team == "a")
@@ -95,10 +96,9 @@ func _refresh_slots() -> void:
 			lbl.text = "[ Slot vide ]"
 		slots_b.add_child(lbl)
 
-	# Mettre a jour le nombre de joueurs sur le matchmaker
+	# Mise à jour du Matchmaker (hôte uniquement)
 	if GameConfig.is_host:
 		Matchmaker.update_room(GameConfig.room_name, GameConfig.players.size(), false)
-	
 
 func _on_lancer_pressed() -> void:
 	if not GameConfig.is_host:
@@ -106,7 +106,7 @@ func _on_lancer_pressed() -> void:
 	if RoomManager.rooms.has(GameConfig.room_name):
 		RoomManager._start_game(GameConfig.room_name)
 	else:
-		status_label.text = "Room introuvable !"
+		status_label.text = " Room introuvable !"
 
 func _on_quitter_pressed() -> void:
 	if GameConfig.is_host:
