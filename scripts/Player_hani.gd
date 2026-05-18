@@ -1,24 +1,24 @@
 class_name Player
 
 var id = 0
-var team_name = ""
+var player_name = ""
 var color = Color.WHITE
 
-var coins = 100
+var gold = 0
 
 var owned_camps = []
 
-func setup(new_id, new_team_name, new_color):
+func setup(new_id, new_player_name, new_color):
 	id = new_id
-	team_name = new_team_name
+	player_name = new_player_name
 	color = new_color
 
-func add_coins(amount):
-	coins += amount
+func add_gold(amount):
+	gold += amount
 
-func spend_coins(amount):
-	if coins >= amount:
-		coins -= amount
+func spend_gold(amount):
+	if gold >= amount:
+		gold -= amount
 		return true
 	
 	return false

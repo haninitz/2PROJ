@@ -100,9 +100,9 @@ func assign_starting_camps():
 func give_income():
 	for player in players:
 		var total_income = calculate_player_income(player)
-		player.add_coins(total_income)
+		player.add_gold(total_income)
 		
-		print(player.team_name, " gains ", total_income, " coins from controlled territory. Total coins: ", player.coins)
+		print(player.player_name, " gains ", total_income, " gold from controlled territory. Total gold: ", player.gold)
 
 func calculate_player_income(player):
 	var total = 0
@@ -142,4 +142,4 @@ func check_end_game():
 			alive_players.append(player)
 	
 	if alive_players.size() == 1:
-		print(alive_players[0].team_name, " wins the operation and controls the territory!")
+		print(alive_players[0].player_name, " wins the operation and controls the territory!")
