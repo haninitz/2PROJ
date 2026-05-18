@@ -1,0 +1,8 @@
+res://scripts/Combat.gd
+res://scripts/Main.gd
+res://scenes/units/fantassin.tscn
+res://scripts/units/AntiBlindage.gd
+res://scripts/Camp_hani.gd
+res://scripts/units/Mortier.gd
+res://scripts/units/Soigneur.gd
+res://scripts/units/Soutien.gd
