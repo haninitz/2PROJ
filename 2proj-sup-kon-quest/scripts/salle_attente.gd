@@ -14,36 +14,42 @@ func _ready() -> void:
 	btn_lancer.disabled = true
 	btn_lancer.visible  = GameConfig.is_host
 
-	label_room_name.text = "Room : %s" % GameConfig.room_name
-	label_map.text       = "Map : %s" % GameConfig.map.to_upper()
-	label_format.text    = "Format : %s" % GameConfig.format
+	_update_labels()
 
 	btn_lancer.pressed.connect(_on_lancer_pressed)
 	btn_quitter.pressed.connect(_on_quitter_pressed)
 
 	RoomManager.player_list_updated.connect(_on_list_updated)
-	NetworkManager.player_connected.connect(func(_id): _refresh_slots())
+	RoomManager.room_full.connect(_on_room_full)
 	NetworkManager.player_disconnected.connect(func(_id): _refresh_slots())
 
 	if GameConfig.is_host:
-		# L'hôte est déjà dans la room — juste rafraîchir
+		# join_room_local() a déjà rempli GameConfig.players avant ce _ready
+		# → on affiche directement, pas besoin d'attendre
 		_refresh_slots()
-		status_label.text = "⏳ En attente des joueurs… 1/%d" % GameConfig.get_max_players()
+		var current: int = GameConfig.players.size()
+		var total:   int = GameConfig.get_max_players()
+		status_label.text = " En attente des joueurs… %d/%d" % [current, total]
 	else:
-		# Le client cherche la room disponible sur le serveur
-		status_label.text = "⏳ Recherche d'une room…"
+		status_label.text = " Connexion à la room..."
 		await get_tree().create_timer(0.5).timeout
-		_ask_available_room.rpc_id(1, GameConfig.steam_name)
-		_refresh_slots()
+		RoomManager.request_join_room.rpc_id(1,
+			GameConfig.room_name,
+			GameConfig.mode,
+			GameConfig.format,
+			GameConfig.diff,
+			GameConfig.map,
+			GameConfig.steam_name
+		)
 
-func _on_list_updated(_rid: String, data: Array) -> void:
-	# Mettre à jour la map et room_name depuis les données reçues
-	if not data.is_empty() and not GameConfig.is_host:
-		# Récupérer les infos de la room depuis RoomManager via le serveur
-		label_room_name.text = "Room : %s" % GameConfig.room_name
-		label_map.text       = "Map : %s" % GameConfig.map.to_upper()
-		label_format.text    = "Format : %s" % GameConfig.format
+func _update_labels() -> void:
+	label_room_name.text = "Room : %s"   % GameConfig.room_name
+	label_map.text       = "Map : %s"    % GameConfig.map.to_upper()
+	label_format.text    = "Format : %s" % GameConfig.format
 
+func _on_list_updated(_rid: String, _data: Array) -> void:
+	_update_labels()
+	btn_lancer.visible = GameConfig.is_host
 	_refresh_slots()
 
 	var total:   int = GameConfig.get_max_players()
@@ -51,26 +57,31 @@ func _on_list_updated(_rid: String, data: Array) -> void:
 
 	if GameConfig.is_host:
 		btn_lancer.disabled = current < total
-		if not btn_lancer.disabled:
-			status_label.text = "✅ Tout le monde est là — lance la partie !"
-		else:
-			status_label.text = "⏳ En attente des joueurs… %d/%d" % [current, total]
+		status_label.text = \
+			"✅ Tout le monde est là — lance la partie !" \
+			if not btn_lancer.disabled \
+			else "⏳ En attente des joueurs… %d/%d" % [current, total]
 	else:
 		status_label.text = "⏳ En attente du lancement… %d/%d" % [current, total]
+
+func _on_room_full(_rid: String) -> void:
+	status_label.text = "Room pleine !"
 
 func _refresh_slots() -> void:
 	for c in slots_a.get_children(): c.queue_free()
 	for c in slots_b.get_children(): c.queue_free()
 
 	var per_team: int = GameConfig.get_players_per_team()
-	var team_a := GameConfig.players.values().filter(func(p): return p.team == "a")
-	var team_b := GameConfig.players.values().filter(func(p): return p.team == "b")
+	var all_players: Array = GameConfig.players.values()
+	all_players.sort_custom(func(a, b): return a.join_order < b.join_order)
+	var team_a: Array = all_players.filter(func(p): return p.team == "a")
+	var team_b: Array = all_players.filter(func(p): return p.team == "b")
 
 	for i in per_team:
 		var lbl := Label.new()
 		if i < team_a.size():
 			var you: String = " (vous)" if team_a[i].id == GameConfig.my_peer_id else ""
-			lbl.text = "🩷 %s%s" % [team_a[i].name, you]
+			lbl.text = "%s%s" % [team_a[i].name, you]
 		else:
 			lbl.text = "[ Slot vide ]"
 		slots_a.add_child(lbl)
@@ -79,39 +90,27 @@ func _refresh_slots() -> void:
 		var lbl := Label.new()
 		if i < team_b.size():
 			var you: String = " (vous)" if team_b[i].id == GameConfig.my_peer_id else ""
-			lbl.text = "💙 %s%s" % [team_b[i].name, you]
+			lbl.text = "%s%s" % [team_b[i].name, you]
 		else:
 			lbl.text = "[ Slot vide ]"
 		slots_b.add_child(lbl)
 
-@rpc("any_peer", "reliable")
-func _ask_available_room(player_name: String) -> void:
-	if not multiplayer.is_server():
-		return
-	var sender := multiplayer.get_remote_sender_id()
-	for rid in RoomManager.rooms:
-		var room: Dictionary = RoomManager.rooms[rid]
-		var max_p: int = RoomManager._format_to_max(room.format)
-		if room.players.size() < max_p:
-			RoomManager.request_join_room.rpc_id(
-				sender, rid, room.mode, room.format,
-				room.diff, room.map, player_name
-			)
-			return
-	# Aucune room disponible — notifier le client
-	_no_room_found.rpc_id(sender)
-
-@rpc("authority", "reliable")
-func _no_room_found() -> void:
-	status_label.text = "❌ Aucune room disponible — demande à l'hôte de créer une partie !"
+	# Mettre a jour le nombre de joueurs sur le matchmaker
+	if GameConfig.is_host:
+		Matchmaker.update_room(GameConfig.room_name, GameConfig.players.size(), false)
+	
 
 func _on_lancer_pressed() -> void:
+	if not GameConfig.is_host:
+		return
 	if RoomManager.rooms.has(GameConfig.room_name):
 		RoomManager._start_game(GameConfig.room_name)
 	else:
-		status_label.text = "⚠ Room introuvable !"
+		status_label.text = "Room introuvable !"
 
 func _on_quitter_pressed() -> void:
+	if GameConfig.is_host:
+		Matchmaker.delete_room(GameConfig.room_name)
 	NetworkManager.disconnect_from_server()
 	GameConfig.reset()
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
