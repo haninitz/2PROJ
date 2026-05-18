@@ -1,6 +1,10 @@
-[gd_scene format=3 uid="uid://dnqnayyr6e5eu"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" uid="uid://db1pkrc8u0u08" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/UI.gd" id="2_ui"]
 
-[node name="Main" type="Node2D" unique_id=941348124]
+[node name="Main" type="Node2D"]
 script = ExtResource("1_main")
+
+[node name="UI" type="CanvasLayer" parent="."]
+script = ExtResource("2_ui")
