@@ -38,27 +38,5 @@ text = "REJOINDRE"
 layout_mode = 2
 text = "← RETOUR"
 
-[node name="join_panel" type="PanelContainer" parent="vbox" unique_id=576923401]
-layout_mode = 2
-
-[node name="vbox" type="VBoxContainer" parent="vbox/join_panel" unique_id=702860438]
-layout_mode = 2
-
-[node name="label_ip" type="Label" parent="vbox/join_panel/vbox" unique_id=1357341919]
-layout_mode = 2
-text = "Adresse IP du serveur"
-
-[node name="ip_input" type="LineEdit" parent="vbox/join_panel/vbox" unique_id=1009696486]
-layout_mode = 2
-placeholder_text = "192.168.1.X"
-
-[node name="btn_connect" type="Button" parent="vbox/join_panel/vbox" unique_id=276163037]
-layout_mode = 2
-text = "SE CONNECTER"
-
-[node name="btn_cancel" type="Button" parent="vbox/join_panel/vbox" unique_id=1373272290]
-layout_mode = 2
-text = "Annuler"
-
 [node name="status_label" type="Label" parent="vbox" unique_id=274526890]
 layout_mode = 2
