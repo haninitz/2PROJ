@@ -102,32 +102,35 @@ func _create_room(room_id: String, mode: String, format: String,
 func _start_game(room_id: String) -> void:
 	if not rooms.has(room_id):
 		return
-	# Notifier le matchmaker que la partie a demarré
+
 	Matchmaker.update_room(room_id, rooms[room_id].players.size(), true)
 	var room: Dictionary = rooms[room_id]
 	print("[RoomManager]  Lancement room '%s'" % room_id)
 
-	# Préparer les données une seule fois
 	var players_array: Array = room.players.values()
 
+	# 1. Preparer le GameConfig de l hote
+	GameConfig.mode   = room.mode
+	GameConfig.format = room.format
+	GameConfig.diff   = room.diff
+	GameConfig.map    = room.map
+	GameConfig.players.clear()
+	for p in players_array:
+		GameConfig.players[p.id] = p
+
+	# 2. Envoyer les RPC a TOUS les clients d abord
 	for pid in room.players:
-		if pid == 1:
-			# ─ L'hôte (peer 1) ne peut pas se RPC à lui-même ─
-			# On appelle _do_start directement en local
-			GameConfig.mode   = room.mode
-			GameConfig.format = room.format
-			GameConfig.diff   = room.diff
-			GameConfig.map    = room.map
-			GameConfig.players.clear()
-			for p in players_array:
-				GameConfig.players[p.id] = p
-			get_tree().change_scene_to_file("res://scenes/Main.tscn")
-		else:
-			# Les clients reçoivent le RPC normalement
+		if pid != 1:
 			_do_start.rpc_id(pid,
 				room.mode, room.format, room.diff,
 				room.map, players_array
 			)
+
+	# 3. Attendre 2 frames pour que les paquets soient envoyes,
+	#    puis l hote change de scene
+	await get_tree().process_frame
+	await get_tree().process_frame
+	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _broadcast_list(room_id: String) -> void:
 	if not rooms.has(room_id):
