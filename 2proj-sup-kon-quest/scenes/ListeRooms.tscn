@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://b4okxg5ubq8xm"]
+
+[ext_resource type="Script" uid="uid://cemnckqbmn7xs" path="res://scripts/liste_rooms.gd" id="1_r70ey"]
+
+[node name="ListeRooms" type="Control" unique_id=570979018]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_r70ey")
+
+[node name="vbox" type="VBoxContainer" parent="." unique_id=1877843053]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="title" type="Label" parent="vbox" unique_id=2081233864]
+layout_mode = 2
+text = "Rooms disponibles"
+
+[node name="scroll" type="ScrollContainer" parent="vbox" unique_id=1438935649]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="room_list" type="VBoxContainer" parent="vbox/scroll" unique_id=602103064]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="btn_refresh" type="Button" parent="vbox" unique_id=1472205808]
+layout_mode = 2
+text = "Actualiser"
+
+[node name="btn_back" type="Button" parent="vbox" unique_id=1599609414]
+layout_mode = 2
+text = "← Retour"
+
+[node name="status_label" type="Label" parent="vbox" unique_id=268239384]
+layout_mode = 2
