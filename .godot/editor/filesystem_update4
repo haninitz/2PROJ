@@ -1,8 +1,4 @@
-res://scripts/Combat.gd
+res://scenes/Main.tscn
+res://scripts/ui/Renderer.gd
+res://scripts/ui/Hud.gd
 res://scripts/Main.gd
-res://scenes/units/fantassin.tscn
-res://scripts/units/AntiBlindage.gd
-res://scripts/Camp_hani.gd
-res://scripts/units/Mortier.gd
-res://scripts/units/Soigneur.gd
-res://scripts/units/Soutien.gd

@@ -18,9 +18,11 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 [autoload]
 
 Combat="*res://scripts/Combat.gd"
-UnitDefs="*res://scripts/UnitDefs.gd"
-MapDefs="*res://scripts/MapDefs.gd"
-Sound="*res://scripts/Sound.gd"
+UnitDefs="*res://scripts/ui/UnitDefs.gd"
+MapDefs="*res://scripts/ui/MapDefs.gd"
+Sound="*res://scripts/ui/Sound.gd"
+Lang="*res://scripts/ui/Lang.gd"
+UIUtils="*res://scripts/ui/UIutils.gd"
 
 [display]
 

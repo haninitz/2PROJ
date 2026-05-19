@@ -22,7 +22,8 @@ var camp: Camp = null          # référence au camp parent
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	# Récupère le camp parent
-	camp = get_parent() as Camp
+	var _p = get_parent()
+	camp = _p if _p is Camp else null
 
 	attack_timer.wait_time = hit_speed
 	attack_timer.one_shot  = false

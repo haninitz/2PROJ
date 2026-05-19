@@ -21,12 +21,18 @@ var has_water:  bool  = false
 var land_zones: Array = []
 var map_chosen: bool  = false
 
-@onready var ui = $UI
+@onready var ui            = $UI
+@onready var map_beverly   = $MapBeverly
+@onready var map_jungle    = $MapJungle
+@onready var map_tropical  = $MapTropical
+
+var _map_nodes : Array = []
 
 var font:      Font
 var _renderer: Renderer
 
 func _ready() -> void:
+	add_to_group("main_node")
 	font      = ThemeDB.fallback_font
 	_renderer = Renderer.new()
 	ui.end_turn_pressed.connect(_on_end_turn)
@@ -36,9 +42,17 @@ func _ready() -> void:
 func _on_map_selected(map_index: int) -> void:
 	ui.hide_map_screen()
 	map_chosen = true
+	_show_map(map_index)
 	_init_data(map_index)
 	_collect_income(0)
 	message = "Joueur 1 — Sélectionnez un de vos camps"
+
+
+func _show_map(map_index: int) -> void:
+	_map_nodes = [map_beverly, map_jungle, map_tropical]
+	for i in range(_map_nodes.size()):
+		if _map_nodes[i]:
+			_map_nodes[i].visible = (i == map_index)
 
 func _init_data(map_index: int) -> void:
 	players = [Player.new("Joueur 1"), Player.new("Joueur 2")]
