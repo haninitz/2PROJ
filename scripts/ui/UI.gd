@@ -14,6 +14,7 @@ signal end_turn_pressed   # ← requis par Main.gd du projet principal
 
 # ── Modules ───────────────────────────────────────────────────────────────────
 var _menu    : MainMenu
+var _splash  : Node
 var _hud     : HUD
 var _victory : VictoryScreen
 var _pause   : Node
@@ -47,7 +48,15 @@ func _ready() -> void:
 	add_child(_victory)
 	add_child(_pause)
 
+	# Initialise le menu d'abord
 	_menu.initialize(self, _u)
+
+	# Lance le splash screen par-dessus
+	_splash = load("res://scripts/ui/SplashScreen.gd").new()
+	add_child(_splash)
+	_splash.splash_finished.connect(_on_splash_finished)
+	# Cache le menu pendant le splash
+	_menu.main_menu.visible = false
 	_hud.setup(_u)
 	_victory.initialize(self, _u)
 	_pause.setup(_u)
@@ -151,3 +160,8 @@ func _get_difficulty_screen() -> Panel: return _menu.difficulty_screen if _menu 
 func _get_squad_screen()      -> Panel: return _menu.squad_screen      if _menu else null
 func _get_victory_screen()    -> Panel: return _victory.victory_screen if _victory else null
 func _get_turn_screen()       -> Panel: return _victory.turn_screen    if _victory else null
+
+
+func _on_splash_finished() -> void:
+	if _menu and _menu.main_menu:
+		_menu.main_menu.visible = true

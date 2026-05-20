@@ -1,4 +1,3 @@
-res://scenes/Main.tscn
-res://scripts/ui/Renderer.gd
-res://scripts/ui/Hud.gd
-res://scripts/Main.gd
+res://scripts/ui/SplashScreen.gd
+res://scripts/ui/UI.gd
+res://scripts/ui/Mainmenu.gd

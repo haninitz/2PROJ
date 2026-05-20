@@ -81,7 +81,7 @@ func _build_stats_bar() -> void:
 	unit_label   = _lbl_add(Vector2(600, U.MAP_H + 52), Vector2(340, 28))
 	unit_label.visible  = false
 	# Cacher la barre stats jusqu'au début du jeu
-	info_label.visible   = false
+	info_label.visible   =	 false
 	gold_label.visible   = false
 	income_label.visible = false
 	camps_label.visible  = false
