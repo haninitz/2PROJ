@@ -1,35 +1,51 @@
 extends Node2D
+# =============================================================================
+#  map_tropical_painter.gd -- Alex's Secret Archipelago
+#
+#  Archipel d'iles isolees :
+#  - Grande ile principale avec base secrete
+#  - 6 petites iles dispersees
+#  - Ocean avec vagues, profondeur variee
+#  - Forets denses, plages, ports
+#  - Ambiance aventure/tropicale
+# =============================================================================
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  map_tropical_painter.gd — VERSION 3 (sans TileMap)
-#  Attache ce script directement à MapTropical (Node2D)
-#  Aucun nœud enfant requis — tout est dessiné via _draw()
-# ─────────────────────────────────────────────────────────────────────────────
+const MAP_W : int = 1152
+const MAP_H : int = 620
 
-const MAP_W = 1152
-const MAP_H = 620
+const C_OCEAN_DEEP := Color(0.05, 0.20, 0.48)
+const C_OCEAN      := Color(0.08, 0.32, 0.65)
+const C_OCEAN_SHAL := Color(0.15, 0.48, 0.75)
+const C_OCEAN_LITE := Color(0.25, 0.62, 0.85)
+const C_SAND_WET   := Color(0.65, 0.55, 0.35)
+const C_SAND       := Color(0.82, 0.72, 0.48)
+const C_SAND_DRY   := Color(0.90, 0.82, 0.58)
+const C_GRASS      := Color(0.20, 0.45, 0.10)
+const C_GRASS_D    := Color(0.13, 0.30, 0.06)
+const C_GRASS_L    := Color(0.28, 0.55, 0.15)
+const C_JUNGLE     := Color(0.08, 0.20, 0.04)
+const C_WALL       := Color(0.30, 0.28, 0.22)
+const C_ROOF       := Color(0.42, 0.22, 0.12)
+const C_ROOF2      := Color(0.20, 0.35, 0.28)
+const C_WOOD       := Color(0.45, 0.32, 0.18)
+const C_WOOD_D     := Color(0.35, 0.24, 0.12)
 
-# ── Île centrale ──────────────────────────────────────────────────────────────
-const ISLAND_CX = 576.0
-const ISLAND_CY = 310.0
-const ISLAND_RX = 400.0
-const ISLAND_RY = 240.0
-
-# ── Couleurs ──────────────────────────────────────────────────────────────────
-const C_OCEAN      = Color(0.08, 0.35, 0.72)
-const C_OCEAN_DARK = Color(0.05, 0.22, 0.55)
-const C_SAND       = Color(0.85, 0.75, 0.50)
-const C_SAND_WET   = Color(0.70, 0.60, 0.35)
-const C_GRASS      = Color(0.20, 0.42, 0.12)
-const C_GRASS_DARK = Color(0.14, 0.30, 0.08)
-const C_GRASS_LITE = Color(0.28, 0.52, 0.16)
-
-# ── Positions arbres ──────────────────────────────────────────────────────────
-const TREE_POS = [
-	Vector2(400, 180), Vector2(520, 140), Vector2(650, 160), Vector2(780, 180),
-	Vector2(370, 310), Vector2(500, 270), Vector2(620, 250), Vector2(750, 270),
-	Vector2(850, 310), Vector2(420, 440), Vector2(560, 470), Vector2(700, 450),
-	Vector2(800, 440),
+# Iles : cx, cy, rx, ry, seed
+const ISLANDS := [
+	# Ile principale (centre-gauche)
+	{"cx": 380.0, "cy": 290.0, "rx": 240.0, "ry": 175.0, "seed": 0.0, "main": true},
+	# Ile Nord-Est
+	{"cx": 820.0, "cy": 120.0, "rx": 110.0, "ry": 80.0,  "seed": 1.2, "main": false},
+	# Ile Est
+	{"cx": 1020.0,"cy": 310.0, "rx": 95.0,  "ry": 120.0, "seed": 2.4, "main": false},
+	# Ile Sud-Est
+	{"cx": 850.0, "cy": 510.0, "rx": 105.0, "ry": 75.0,  "seed": 3.6, "main": false},
+	# Ile Sud
+	{"cx": 540.0, "cy": 560.0, "rx": 80.0,  "ry": 45.0,  "seed": 4.8, "main": false},
+	# Ile Nord
+	{"cx": 600.0, "cy": 60.0,  "rx": 90.0,  "ry": 48.0,  "seed": 6.0, "main": false},
+	# Ile Nord-Ouest
+	{"cx": 100.0, "cy": 100.0, "rx": 70.0,  "ry": 55.0,  "seed": 7.2, "main": false},
 ]
 
 var _tex_plant : Texture2D = null
@@ -38,219 +54,267 @@ var _tex_plant : Texture2D = null
 func _ready() -> void:
 	_tex_plant = load("res://assets/tilesets/cainos/TX Plant.png")
 	_spawn_trees()
-	_spawn_waves_node()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  DESSIN PRINCIPAL
-# ─────────────────────────────────────────────────────────────────────────────
-func _draw() -> void:
-	var t = Time.get_ticks_msec() / 1000.0
-
-	# 1. Fond océan
-	_draw_ocean(t)
-
-	# 2. Plage (anneau sable)
-	_draw_beach()
-
-	# 3. Île (herbe irrégulière)
-	_draw_island()
-
-	# 4. Texture herbe (petits détails)
-	_draw_grass_details(t)
-
-	# 5. Ports
-	_draw_ports(t)
 
 
 func _process(_delta: float) -> void:
 	queue_redraw()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  OCEAN
-# ─────────────────────────────────────────────────────────────────────────────
+func _draw() -> void:
+	var t : float = Time.get_ticks_msec() / 1000.0
+	_draw_ocean(t)
+	_draw_shallow_water()
+	_draw_islands()
+	_draw_buildings(t)
+	_draw_ports(t)
+	_draw_details(t)
+
+
+# ── Ocean ─────────────────────────────────────────────────────────────────────
 func _draw_ocean(t: float) -> void:
-	# Fond bleu
-	draw_rect(Rect2(0, 0, MAP_W, MAP_H), C_OCEAN)
+	draw_rect(Rect2(0, 0, MAP_W, MAP_H), C_OCEAN_DEEP)
+	# Zones plus claires
+	_draw_blob(300, 350, 500, 400, C_OCEAN)
+	_draw_blob(800, 300, 400, 320, C_OCEAN)
 
-	# Bords plus sombres
-	draw_rect(Rect2(0, 0, MAP_W, 25), C_OCEAN_DARK)
-	draw_rect(Rect2(0, MAP_H - 25, MAP_W, 25), C_OCEAN_DARK)
-	draw_rect(Rect2(0, 0, 25, MAP_H), C_OCEAN_DARK)
-	draw_rect(Rect2(MAP_W - 25, 0, 25, MAP_H), C_OCEAN_DARK)
-
-	# Vagues animées
-	for i in range(14):
-		var wy  = 22.0 + float(i) * 44.0
-		var alpha = 0.10 + sin(t * 0.9 + float(i) * 0.55) * 0.04
-		var col = Color(0.55, 0.80, 1.0, alpha)
-		var x = 0
+	# Vagues
+	for i in range(20):
+		var wy    : float = 15.0 + float(i) * 30.0
+		var alpha : float = 0.06 + sin(t*0.8 + float(i)*0.6) * 0.03
+		var x : int = 0
 		while x < MAP_W:
-			var y1 = wy + sin(float(x) * 0.013 + t * 0.85 + float(i) * 0.5) * 7.0
-			var y2 = wy + sin(float(x + 48) * 0.013 + t * 0.85 + float(i) * 0.5) * 7.0
-			draw_line(Vector2(x, y1), Vector2(x + 48, y2), col, 1.6)
-			x += 48
+			var y1 : float = wy + sin(float(x)*0.016 + t*0.9 + float(i)*0.5) * 5.0
+			var y2 : float = wy + sin(float(x+35)*0.016 + t*0.9 + float(i)*0.5) * 5.0
+			draw_line(Vector2(x, y1), Vector2(x+35, y2),
+				Color(0.55, 0.85, 1.0, alpha), 1.5)
+			x += 35
+
+	# Reflets soleil
+	for i in range(10):
+		var sx : float = 100.0 + float(i) * 100.0
+		var sy : float = 50.0 + sin(t*0.4 + float(i))*15.0
+		draw_line(Vector2(sx, sy), Vector2(sx+25, sy+2),
+			Color(1.0, 1.0, 0.85, 0.12), 2.0)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  PLAGE
-# ─────────────────────────────────────────────────────────────────────────────
-func _draw_beach() -> void:
-	var pts_wet  = PackedVector2Array()
-	var pts_sand = PackedVector2Array()
-	var steps    = 120
-
-	for i in range(steps + 1):
-		var angle = float(i) / float(steps) * TAU
-		var noise = _island_noise(angle)
-
-		# Sable humide (juste au bord de l'île)
-		var rw = (ISLAND_RX + 30.0) * (1.0 + noise * 0.6)
-		var rh = (ISLAND_RY + 30.0) * (1.0 + noise * 0.6)
-		pts_wet.append(Vector2(ISLAND_CX + cos(angle) * rw,
-							   ISLAND_CY + sin(angle) * rh))
-
-		# Sable sec (plus loin)
-		var rs = (ISLAND_RX + 18.0) * (1.0 + noise * 0.7)
-		var rss = (ISLAND_RY + 18.0) * (1.0 + noise * 0.7)
-		pts_sand.append(Vector2(ISLAND_CX + cos(angle) * rs,
-								ISLAND_CY + sin(angle) * rss))
-
-	draw_colored_polygon(pts_wet, C_SAND_WET)
-	draw_colored_polygon(pts_sand, C_SAND)
+# ── Eaux peu profondes autour des iles ────────────────────────────────────────
+func _draw_shallow_water() -> void:
+	for isl in ISLANDS:
+		var steps : int = 50
+		var pts   := PackedVector2Array()
+		for i in range(steps):
+			var angle : float = float(i) / float(steps) * TAU
+			var noise : float = _noise(angle + isl["seed"])
+			var rx : float = isl["rx"] * (1.0 + noise) + 35.0
+			var ry : float = isl["ry"] * (1.0 + noise) + 35.0
+			pts.append(Vector2(isl["cx"] + cos(angle)*rx,
+				isl["cy"] + sin(angle)*ry))
+		draw_colored_polygon(pts, C_OCEAN_SHAL)
+		# Zone encore plus claire
+		var pts2 := PackedVector2Array()
+		for i in range(steps):
+			var angle : float = float(i) / float(steps) * TAU
+			var noise : float = _noise(angle + isl["seed"])
+			var rx : float = isl["rx"] * (1.0 + noise) + 18.0
+			var ry : float = isl["ry"] * (1.0 + noise) + 18.0
+			pts2.append(Vector2(isl["cx"] + cos(angle)*rx,
+				isl["cy"] + sin(angle)*ry))
+		draw_colored_polygon(pts2, C_OCEAN_LITE)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  ÎLE (herbe)
-# ─────────────────────────────────────────────────────────────────────────────
-func _draw_island() -> void:
-	var pts       = PackedVector2Array()
-	var pts_dark  = PackedVector2Array()
-	var pts_lite  = PackedVector2Array()
-	var steps     = 120
+# ── Iles ──────────────────────────────────────────────────────────────────────
+func _draw_islands() -> void:
+	for isl in ISLANDS:
+		var steps : int = 60
+		var pts_wet  := PackedVector2Array()
+		var pts_sand := PackedVector2Array()
+		var pts_dry  := PackedVector2Array()
+		var pts_grass := PackedVector2Array()
+		var pts_dark  := PackedVector2Array()
+		var pts_jungle := PackedVector2Array()
 
-	for i in range(steps + 1):
-		var angle = float(i) / float(steps) * TAU
-		var noise = _island_noise(angle)
-		var rx    = ISLAND_RX * (1.0 + noise)
-		var ry    = ISLAND_RY * (1.0 + noise)
-		pts.append(Vector2(ISLAND_CX + cos(angle) * rx,
-						   ISLAND_CY + sin(angle) * ry))
+		for i in range(steps):
+			var angle : float = float(i) / float(steps) * TAU
+			var noise : float = _noise(angle + isl["seed"])
+			var rx : float = isl["rx"] * (1.0 + noise)
+			var ry : float = isl["ry"] * (1.0 + noise)
+			pts_wet.append(Vector2(isl["cx"]+cos(angle)*(rx+10), isl["cy"]+sin(angle)*(ry+10)))
+			pts_sand.append(Vector2(isl["cx"]+cos(angle)*(rx+4), isl["cy"]+sin(angle)*(ry+4)))
+			pts_dry.append(Vector2(isl["cx"]+cos(angle)*rx, isl["cy"]+sin(angle)*ry))
+			pts_grass.append(Vector2(isl["cx"]+cos(angle)*rx*0.88, isl["cy"]+sin(angle)*ry*0.88))
+			pts_dark.append(Vector2(isl["cx"]+cos(angle)*rx*0.72, isl["cy"]+sin(angle)*ry*0.72))
+			if isl["main"]:
+				pts_jungle.append(Vector2(isl["cx"]+cos(angle)*rx*0.50, isl["cy"]+sin(angle)*ry*0.50))
 
-		# Zone sombre (bords intérieurs)
-		var rxd = ISLAND_RX * (1.0 + noise) * 0.92
-		var ryd = ISLAND_RY * (1.0 + noise) * 0.92
-		pts_dark.append(Vector2(ISLAND_CX + cos(angle) * rxd,
-								ISLAND_CY + sin(angle) * ryd))
-
-		# Zone claire (centre)
-		var rxl = ISLAND_RX * 0.55
-		var ryl = ISLAND_RY * 0.55
-		pts_lite.append(Vector2(ISLAND_CX + cos(angle) * rxl,
-								ISLAND_CY + sin(angle) * ryl))
-
-	draw_colored_polygon(pts, C_GRASS)
-	draw_colored_polygon(pts_dark, C_GRASS_DARK)
-	draw_colored_polygon(pts_lite, C_GRASS_LITE)
-	# Centre très clair
-	draw_circle(Vector2(ISLAND_CX, ISLAND_CY), 80.0,
-		Color(C_GRASS_LITE.r, C_GRASS_LITE.g, C_GRASS_LITE.b, 0.4))
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  DÉTAILS HERBE (petits points/taches)
-# ─────────────────────────────────────────────────────────────────────────────
-func _draw_grass_details(_t: float) -> void:
-	var detail_pos = [
-		Vector2(480, 200), Vector2(580, 180), Vector2(680, 220),
-		Vector2(450, 340), Vector2(600, 300), Vector2(730, 350),
-		Vector2(500, 430), Vector2(650, 410), Vector2(750, 390),
-	]
-	for pos in detail_pos:
-		if _is_island(pos.x, pos.y, -30.0):
-			draw_circle(pos, 12.0, Color(0.24, 0.48, 0.14, 0.35))
-			draw_circle(pos + Vector2(8, 4), 8.0, Color(0.18, 0.38, 0.10, 0.25))
+		draw_colored_polygon(pts_wet, C_SAND_WET)
+		draw_colored_polygon(pts_sand, C_SAND)
+		draw_colored_polygon(pts_dry, C_SAND_DRY)
+		draw_colored_polygon(pts_grass, C_GRASS)
+		draw_colored_polygon(pts_dark, C_GRASS_D)
+		if isl["main"]:
+			draw_colored_polygon(pts_jungle, C_JUNGLE)
+		# Centre clair
+		draw_circle(Vector2(isl["cx"], isl["cy"]),
+			isl["rx"] * 0.25, Color(C_GRASS_L.r, C_GRASS_L.g, C_GRASS_L.b, 0.35))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  PORTS
-# ─────────────────────────────────────────────────────────────────────────────
+# ── Batiments sur les iles ────────────────────────────────────────────────────
+func _draw_buildings(t: float) -> void:
+	# Ile principale -- base secrete
+	_draw_hut(320, 245, 70, 55, "BASE", C_ROOF2, t, 0)
+	_draw_hut(420, 260, 55, 45, "CACHE", C_ROOF, t, 1)
+	_draw_hut(350, 330, 60, 48, "STORE", C_ROOF2, t, 2)
+
+	# Petites iles -- avant-postes
+	_draw_hut(790, 100, 45, 38, "NE POST", C_ROOF, t, 3)
+	_draw_hut(990, 280, 45, 38, "E POST",  C_ROOF2, t, 4)
+	_draw_hut(820, 490, 45, 38, "SE POST", C_ROOF, t, 5)
+	_draw_hut(520, 545, 42, 35, "S POST",  C_ROOF2, t, 6)
+	_draw_hut(570, 42,  42, 35, "N POST",  C_ROOF,  t, 7)
+	_draw_hut(70,  80,  42, 35, "NW POST", C_ROOF2, t, 8)
+
+
+func _draw_hut(x: float, y: float, w: float, h: float,
+		label: String, roof: Color, t: float, seed: int) -> void:
+	var pulse : float = 0.6 + sin(t * 1.3 + float(seed) * 1.2) * 0.25
+	# Ombre
+	draw_rect(Rect2(x+3, y+3, w, h), Color(0,0,0,0.20))
+	# Mur
+	draw_rect(Rect2(x, y, w, h), C_WALL)
+	# Toit triangulaire
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(x-4, y+h*0.35),
+		Vector2(x+w/2, y-8),
+		Vector2(x+w+4, y+h*0.35)
+	]), roof)
+	# Bord toit
+	draw_polyline(PackedVector2Array([
+		Vector2(x-4, y+h*0.35),
+		Vector2(x+w/2, y-8),
+		Vector2(x+w+4, y+h*0.35),
+		Vector2(x-4, y+h*0.35)
+	]), Color(roof.r*0.75, roof.g*0.75, roof.b*0.75), 1.5)
+	# Fenetres
+	draw_rect(Rect2(x+8, y+h*0.38, w*0.28, h*0.25), Color(0.80, 0.75, 0.45, 0.80))
+	draw_rect(Rect2(x+w*0.55, y+h*0.38, w*0.28, h*0.25), Color(0.80, 0.75, 0.45, 0.80))
+	# Porte
+	draw_rect(Rect2(x+w/2-7, y+h-16, 14, 16), C_WOOD_D)
+	# Label
+	draw_string(ThemeDB.fallback_font, Vector2(x+3, y-2),
+		label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8,
+		Color(1.0, 0.92, 0.65, 0.90))
+	# Fumee / signal
+	if seed % 2 == 0:
+		draw_circle(Vector2(x+w/2, y-10), 3.0,
+			Color(0.90, 0.85, 0.70, pulse * 0.60))
+
+
+# ── Ports ─────────────────────────────────────────────────────────────────────
 func _draw_ports(t: float) -> void:
-	# Port gauche — bord ouest de l'île
-	var port_l = Vector2(ISLAND_CX - ISLAND_RX - 5, ISLAND_CY)
-	# Port droit — bord est de l'île
-	var port_r = Vector2(ISLAND_CX + ISLAND_RX + 5, ISLAND_CY)
-
-	for port in [port_l, port_r]:
-		# Quai bois
-		draw_rect(Rect2(port.x - 14, port.y - 22, 28, 44),
-			Color(0.42, 0.30, 0.16))
+	var ports : Array = [
+		# Ile principale
+		{"pos": Vector2(175, 290), "dir": Vector2(-1, 0)},
+		{"pos": Vector2(380, 470), "dir": Vector2(0, 1)},
+		# Ile Est
+		{"pos": Vector2(1118, 310), "dir": Vector2(1, 0)},
+		# Ile Sud-Est
+		{"pos": Vector2(860, 580), "dir": Vector2(0, 1)},
+	]
+	for p in ports:
+		var pos : Vector2 = p["pos"]
+		var dir : Vector2 = p["dir"]
+		var perp : Vector2 = Vector2(-dir.y, dir.x)
+		# Quai en bois
+		draw_colored_polygon(PackedVector2Array([
+			pos + perp*14, pos - perp*14,
+			pos + dir*35 - perp*14,
+			pos + dir*35 + perp*14
+		]), C_WOOD)
 		# Planches
 		for j in range(4):
-			draw_rect(Rect2(port.x - 14, port.y - 20 + j * 10, 28, 2),
-				Color(0.30, 0.20, 0.10))
-		# Anneau port pulsant
-		var pulse = sin(t * 2.2) * 0.15
-		draw_arc(port, 18.0, 0, TAU, 32,
-			Color(0.25, 0.72, 1.0, 0.80 + pulse), 3.5)
-		draw_arc(port, 26.0, 0, TAU, 32,
-			Color(0.25, 0.72, 1.0, 0.25 + pulse * 0.5), 1.5)
+			var pp : Vector2 = pos + dir * (7.0 + float(j)*7.0)
+			draw_line(pp + perp*14, pp - perp*14, C_WOOD_D, 1.5)
+		# Anneau port
+		var pulse : float = 0.7 + sin(t*2.0)*0.25
+		draw_arc(pos + dir*35, 14.0, 0, TAU, 20,
+			Color(0.25, 0.75, 1.0, pulse), 3.0)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  ARBRES (Sprite2D)
-# ─────────────────────────────────────────────────────────────────────────────
+# ── Details ───────────────────────────────────────────────────────────────────
+func _draw_details(t: float) -> void:
+	# Rochers dans l'ocean
+	var rocks : Array[Vector2] = [
+		Vector2(650, 200), Vector2(700, 380), Vector2(480, 160),
+		Vector2(900, 380), Vector2(200, 420), Vector2(750, 240),
+	]
+	for i in range(rocks.size()):
+		var pos : Vector2 = rocks[i]
+		draw_circle(pos, 10.0, Color(0.22, 0.25, 0.20))
+		draw_circle(pos+Vector2(3,-2), 6.0, Color(0.30, 0.33, 0.28))
+		# Mousse marine
+		draw_arc(pos, 12.0, 0.5, 2.2, 8,
+			Color(0.30, 0.55, 0.35, 0.40), 2.0)
+
+	# Halos mystere sur certaines iles
+	for i in range(0, ISLANDS.size(), 2):
+		var isl  : Dictionary = ISLANDS[i]
+		var pu   : float      = 0.03 + sin(t*0.8 + float(i)*0.9)*0.015
+		draw_circle(Vector2(isl["cx"], isl["cy"]),
+			isl["rx"]*0.6, Color(0.20, 0.80, 0.40, pu))
+
+
+# ── Blob helper ───────────────────────────────────────────────────────────────
+func _draw_blob(cx: float, cy: float, rx: float, ry: float, col: Color) -> void:
+	var pts := PackedVector2Array()
+	for i in range(28):
+		var angle : float = float(i) / 28.0 * TAU
+		var noise : float = sin(angle*3)*0.07 + cos(angle*5)*0.04
+		pts.append(Vector2(cx+cos(angle)*rx*(1+noise), cy+sin(angle)*ry*(1+noise)))
+	draw_colored_polygon(pts, col)
+
+
+# ── Arbres ────────────────────────────────────────────────────────────────────
 func _spawn_trees() -> void:
 	if _tex_plant == null:
-		push_warning("TX Plant.png introuvable")
 		return
-
-	for i in range(TREE_POS.size()):
-		var pos = TREE_POS[i]
-		if not _is_island(pos.x, pos.y, -25.0):
-			continue
-
-		# Ombre
-		var shadow      = ColorRect.new()
-		shadow.color    = Color(0, 0, 0, 0.20)
-		shadow.size     = Vector2(44, 12)
-		shadow.position = pos + Vector2(-22, 24)
-		add_child(shadow)
-
-		# Arbre
-		var sprite             = Sprite2D.new()
-		sprite.texture         = _tex_plant
-		sprite.region_enabled  = true
-		sprite.region_rect     = Rect2((i % 3) * 160, 0, 140, 160)
-		sprite.scale           = Vector2(0.42, 0.42)
-		sprite.position        = pos
-		sprite.centered        = true
-		sprite.modulate        = Color(0.88, 1.0, 0.68)
-		add_child(sprite)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  VAGUES (nœud séparé pour éviter z-order issues)
-# ─────────────────────────────────────────────────────────────────────────────
-func _spawn_waves_node() -> void:
-	pass  # Les vagues sont dans _draw() directement
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
-func _island_noise(angle: float) -> float:
-	return (sin(angle * 5.0) * 0.06 +
-			sin(angle * 9.0) * 0.04 +
-			sin(angle * 13.0) * 0.03 +
-			cos(angle * 7.0) * 0.05)
+	var tree_pos : Array[Vector2] = [
+		# Ile principale
+		Vector2(240,220), Vector2(300,180), Vector2(360,200),
+		Vector2(430,190), Vector2(480,225), Vector2(260,310),
+		Vector2(320,350), Vector2(420,360), Vector2(480,300),
+		Vector2(350,270), Vector2(290,260), Vector2(450,250),
+		# Ile Nord-Est
+		Vector2(775,95),  Vector2(835,85),  Vector2(860,130),
+		# Ile Est
+		Vector2(975,265), Vector2(1035,280),Vector2(1005,335),
+		# Ile Sud-Est
+		Vector2(815,475), Vector2(875,470), Vector2(850,530),
+		# Ile Sud
+		Vector2(510,540), Vector2(565,555),
+		# Ile Nord
+		Vector2(565,38),  Vector2(618,45),
+		# Ile Nord-Ouest
+		Vector2(62,72),   Vector2(108,90),
+	]
+	for i in range(tree_pos.size()):
+		var pos : Vector2 = tree_pos[i]
+		var sh := ColorRect.new()
+		sh.color = Color(0,0,0,0.18)
+		sh.size  = Vector2(34,10)
+		sh.position = pos + Vector2(-17,20)
+		add_child(sh)
+		var sp := Sprite2D.new()
+		sp.texture = _tex_plant
+		sp.region_enabled = true
+		sp.region_rect = Rect2((i%3)*160, 0, 140, 160)
+		sp.scale = Vector2(0.40, 0.40)
+		sp.position = pos
+		sp.centered = true
+		sp.modulate = Color(0.80, 1.0, 0.65)
+		add_child(sp)
 
 
-func _is_island(px: float, py: float, margin: float) -> bool:
-	var dx    = (px - ISLAND_CX) / (ISLAND_RX + margin)
-	var dy    = (py - ISLAND_CY) / (ISLAND_RY + margin)
-	var dist  = dx * dx + dy * dy
-	var angle = atan2(py - ISLAND_CY, px - ISLAND_CX)
-	var noise = _island_noise(angle)
-	return dist < (1.0 + noise)
+# ── Noise helper ──────────────────────────────────────────────────────────────
+func _noise(angle: float) -> float:
+	return (sin(angle*4.0)*0.07 + sin(angle*8.0)*0.04 +
+			cos(angle*6.0)*0.05 + cos(angle*11.0)*0.03)

@@ -26,8 +26,7 @@ extends Node2D
 const MAP_SCENES : Array = [
 	"res://scenes/maps/map_beverly.tscn",    # 0 — Beverly Hills (Clover)
 	"res://scenes/maps/map_jungle.tscn",     # 1 — Jungle Techno (Sam)
-	"res://scenes/maps/map_tropical.tscn",   # 2 — Île Tropicale (Alex)
-	"res://scenes/maps/map_woohp.tscn",      # 3 — QG WOOHP (Jerry)
+	"res://scenes/maps/MapTropical.tscn",   # 2 — Île Tropicale (Alex)
 ]
 
 var _current_map : Node = null

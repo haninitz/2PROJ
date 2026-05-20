@@ -1,3 +1,8 @@
-res://scripts/ui/SplashScreen.gd
+res://scripts/map_beverly_painter.gd
+res://scripts/map_jungle_painter.gd
+res://scripts/map_tropical_painter.gd
+res://scripts/ui/Mapbackground.gd
 res://scripts/ui/UI.gd
-res://scripts/ui/Mainmenu.gd
+res://scenes/Main.tscn
+res://scripts/ui/Lang.gd
+res://scripts/Main.gd

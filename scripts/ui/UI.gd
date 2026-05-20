@@ -65,6 +65,7 @@ func _ready() -> void:
 	_menu.map_selected.connect(func(i : int):
 		_game_started = true
 		_hud.show_hud()
+		_show_map(i)
 		map_selected.emit(i))
 	_menu.mode_selected.connect(func(a : bool, d : String): mode_selected.emit(a, d))
 	_menu.squads_selected.connect(func(a : String, b : String): squads_selected.emit(a, b))
@@ -165,3 +166,16 @@ func _get_turn_screen()       -> Panel: return _victory.turn_screen    if _victo
 func _on_splash_finished() -> void:
 	if _menu and _menu.main_menu:
 		_menu.main_menu.visible = true
+
+
+func _show_map(index: int) -> void:
+	var map_names := ["MapBeverly", "MapJungle", "MapTropical"]
+	var parent := get_parent()
+	for map_name in map_names:
+		var node := parent.get_node_or_null(map_name)
+		if node:
+			node.visible = false
+	if index >= 0 and index < map_names.size():
+		var target := parent.get_node_or_null(map_names[index])
+		if target:
+			target.visible = true

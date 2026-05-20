@@ -1,243 +1,190 @@
-extends Node2D
+extends Node
 
-const WIN_W  = 1152
-const MAP_H  = 620
-const CAMP_R = 42.0
+var current: String = "fr"
 
-var camps:          Array = []
-var players:        Array = []
-var current_player: int   = 0
-var turn:           int   = 1
-var selected_idx:   int   = -1
-var game_over:      bool  = false
-var winner:         String = ""
-var message:        String = ""
+const STRINGS = {
+	"fr": {
+		# Menu principal
+		"subtitle":       "Stratégie & Conquête  •  Totally Spies",
+		"play":           "JOUER",
+		"quit":           "Quitter",
+		"back":           "← Retour",
+		"footer":         "Projet 2PROJ — SUPINFO Paris",
+		# Sélection de langue
+		"lang_title":     "Langue / Language / Idioma",
+		# Mode de jeu
+		"mode_title":     "Mode de jeu",
+		"mode_2p":        "2 Joueurs",
+		"mode_2p_desc":   "Deux joueurs humains sur le même écran",
+		"mode_1p":        "1 Joueur  (vs IA)",
+		"mode_1p_desc":   "Jouez contre une intelligence artificielle",
+		# Difficulté
+		"diff_title":     "Difficulté de l'IA",
+		"diff_easy":      "Facile",
+		"diff_easy_desc": "L'IA attaque rarement et recrute peu",
+		"diff_med":       "Moyen",
+		"diff_med_desc":  "L'IA gère ses troupes et sait attaquer",
+		"diff_hard":      "Difficile",
+		"diff_hard_desc": "L'IA est agressive et optimise ses revenus",
+		# Sélection de carte
+		"map_title":      "Choisissez une carte",
+		# HUD
+		"player_turn":    "%s — Tour %d",
+		"gold":           "Or : %d",
+		"income":         "+%d /tour",
+		"camps":          "Camps : %d",
+		"end_turn":       "Fin de tour",
+		"unit_label":     "Unité : %s",
+		"queue_empty":    "vide",
+		"queue_type":     "Type",
+		"queue_label":    "File",
+		# Victoire
+		"victory_title":  "VICTOIRE !",
+		"victory_sub":    "a remporté la conquête !",
+		"victory_turns":  "Partie terminée en %d tours",
+		"replay":         "REJOUER",
+		# Noms joueurs
+		"player1":        "Joueur 1",
+		"player2":        "Joueur 2",
+		# Sélection squads
+		"squad_title":    "Choisissez votre équipe",
+		"squad_p1":       "Joueur 1 — Choisissez votre équipe",
+		"squad_p2":       "Joueur 2 — Choisissez votre équipe",
+		# Écran changement de tour
+		"turn_title":     "C'est votre tour !",
+		"turn_number":    "Tour %d",
+		"turn_prompt":    "Cliquez n'importe où pour commencer",
+		# Messages de jeu
+		"msg_select":     "%s — Sélectionnez un de vos camps",
+		"msg_selected":   "%s sélectionné — Cliquez une cible ou recrutez",
+		"msg_not_yours":  "Ce camp ne vous appartient pas !",
+		"msg_move":       "%d unités déplacées vers %s",
+		"msg_attack":     "Attaque sur %s !",
+		"msg_need_move":  "Il faut au moins 2 unités pour se déplacer !",
+		"msg_need_atk":   "Il faut au moins 2 unités pour attaquer !",
+		"msg_produced":   "Unité produite à %s",
+		"msg_no_camp":    "Sélectionnez d'abord un camp !",
+		"msg_no_gold":    "Pas assez d'or ! (10 or requis)",
+		"msg_no_gold_p":  "Pas assez d'or ! (%d or requis)",
+		"msg_queue_full": "File pleine ! (3 unités maximum en attente)",
+		"msg_recruited":  "%s ajouté à la file de %s",
+		"msg_victory":    "VICTOIRE DE %s !",
+	},
+	"en": {
+		"subtitle":       "Strategy & Conquest  •  Totally Spies",
+		"play":           "PLAY",
+		"quit":           "Quit",
+		"back":           "← Back",
+		"footer":         "Project 2PROJ — SUPINFO Paris",
+		"lang_title":     "Langue / Language / Idioma",
+		"mode_title":     "Game Mode",
+		"mode_2p":        "2 Players",
+		"mode_2p_desc":   "Two human players on the same screen",
+		"mode_1p":        "1 Player  (vs AI)",
+		"mode_1p_desc":   "Play against an artificial intelligence",
+		"diff_title":     "AI Difficulty",
+		"diff_easy":      "Easy",
+		"diff_easy_desc": "The AI rarely attacks and recruits few units",
+		"diff_med":       "Medium",
+		"diff_med_desc":  "The AI manages its troops and knows how to attack",
+		"diff_hard":      "Hard",
+		"diff_hard_desc": "The AI is aggressive and optimizes its income",
+		"map_title":      "Choose a map",
+		"player_turn":    "%s — Turn %d",
+		"gold":           "Gold: %d",
+		"income":         "+%d /turn",
+		"camps":          "Camps: %d",
+		"end_turn":       "End Turn",
+		"unit_label":     "Unit: %s",
+		"queue_empty":    "empty",
+		"queue_type":     "Type",
+		"queue_label":    "Queue",
+		"victory_title":  "VICTORY!",
+		"victory_sub":    "has won the conquest!",
+		"victory_turns":  "Game over in %d turns",
+		"replay":         "REPLAY",
+		"player1":        "Player 1",
+		"player2":        "Player 2",
+		"squad_title":    "Choose your squad",
+		"squad_p1":       "Player 1 — Choose your squad",
+		"squad_p2":       "Player 2 — Choose your squad",
+		"turn_title":     "It's your turn!",
+		"turn_number":    "Turn %d",
+		"turn_prompt":    "Click anywhere to start",
+		"msg_select":     "%s — Select one of your camps",
+		"msg_selected":   "%s selected — Click a target or recruit",
+		"msg_not_yours":  "This camp doesn't belong to you!",
+		"msg_move":       "%d units moved to %s",
+		"msg_attack":     "Attack on %s!",
+		"msg_need_move":  "Need at least 2 units to move!",
+		"msg_need_atk":   "Need at least 2 units to attack!",
+		"msg_produced":   "Unit produced at %s",
+		"msg_no_camp":    "Select a camp first!",
+		"msg_no_gold":    "Not enough gold! (10 gold required)",
+		"msg_no_gold_p":  "Not enough gold! (%d gold required)",
+		"msg_queue_full": "Queue full! (3 units max waiting)",
+		"msg_recruited":  "%s added to %s queue",
+		"msg_victory":    "%s WINS!",
+	},
+	"es": {
+		"subtitle":       "Estrategia & Conquista  •  Totally Spies",
+		"play":           "JUGAR",
+		"quit":           "Salir",
+		"back":           "← Volver",
+		"footer":         "Proyecto 2PROJ — SUPINFO París",
+		"lang_title":     "Langue / Language / Idioma",
+		"mode_title":     "Modo de juego",
+		"mode_2p":        "2 Jugadores",
+		"mode_2p_desc":   "Dos jugadores humanos en la misma pantalla",
+		"mode_1p":        "1 Jugador  (vs IA)",
+		"mode_1p_desc":   "Juega contra una inteligencia artificial",
+		"diff_title":     "Dificultad de la IA",
+		"diff_easy":      "Fácil",
+		"diff_easy_desc": "La IA raramente ataca y recluta poco",
+		"diff_med":       "Medio",
+		"diff_med_desc":  "La IA gestiona sus tropas y sabe atacar",
+		"diff_hard":      "Difícil",
+		"diff_hard_desc": "La IA es agresiva y optimiza sus ingresos",
+		"map_title":      "Elige un mapa",
+		"player_turn":    "%s — Turno %d",
+		"gold":           "Oro: %d",
+		"income":         "+%d /turno",
+		"camps":          "Camp.: %d",
+		"end_turn":       "Fin de turno",
+		"unit_label":     "Unidad: %s",
+		"queue_empty":    "vacío",
+		"queue_type":     "Tipo",
+		"queue_label":    "Cola",
+		"victory_title":  "¡VICTORIA!",
+		"victory_sub":    "¡ha ganado la conquista!",
+		"victory_turns":  "Partida terminada en %d turnos",
+		"replay":         "REPETIR",
+		"player1":        "Jugador 1",
+		"player2":        "Jugador 2",
+		"squad_title":    "Elige tu equipo",
+		"squad_p1":       "Jugador 1 — Elige tu equipo",
+		"squad_p2":       "Jugador 2 — Elige tu equipo",
+		"turn_title":     "¡Es tu turno!",
+		"turn_number":    "Turno %d",
+		"turn_prompt":    "Haz clic en cualquier lugar para comenzar",
+		"msg_select":     "%s — Selecciona uno de tus campamentos",
+		"msg_selected":   "%s seleccionado — Haz clic en un objetivo o recluta",
+		"msg_not_yours":  "¡Este campamento no te pertenece!",
+		"msg_move":       "%d unidades movidas a %s",
+		"msg_attack":     "¡Ataque a %s!",
+		"msg_need_move":  "¡Necesitas al menos 2 unidades para moverte!",
+		"msg_need_atk":   "¡Necesitas al menos 2 unidades para atacar!",
+		"msg_produced":   "Unidad producida en %s",
+		"msg_no_camp":    "¡Selecciona primero un campamento!",
+		"msg_no_gold":    "¡Oro insuficiente! (10 oro requerido)",
+		"msg_no_gold_p":  "¡Oro insuficiente! (%d oro requerido)",
+		"msg_queue_full": "¡Cola llena! (máximo 3 unidades)",
+		"msg_recruited":  "%s añadido a la cola de %s",
+		"msg_victory":    "¡%s GANA!",
+	}
+}
 
-var forests:    Array = []
-var river_x:    int   = -1
-var bridge_y:   int   = -1
-var bridge_h:   int   = 0
-var has_water:  bool  = false
-var land_zones: Array = []
-var map_chosen: bool  = false
-
-@onready var ui            = $UI
-@onready var map_beverly   = $MapBeverly
-@onready var map_jungle    = $MapJungle
-@onready var map_tropical  = $MapTropical
-
-var _map_nodes : Array = []
-
-var font:      Font
-var _renderer: Renderer
-
-func _ready() -> void:
-	add_to_group("main_node")
-	font      = ThemeDB.fallback_font
-	_renderer = Renderer.new()
-	ui.end_turn_pressed.connect(_on_end_turn)
-	ui.recruit_pressed.connect(_on_recruit)
-	ui.map_selected.connect(_on_map_selected)
-
-func _on_map_selected(map_index: int) -> void:
-	ui.hide_map_screen()
-	map_chosen = true
-	_show_map(map_index)
-	_init_data(map_index)
-	_collect_income(0)
-	message = "Joueur 1 — Sélectionnez un de vos camps"
-
-
-func _show_map(map_index: int) -> void:
-	_map_nodes = [map_beverly, map_jungle, map_tropical]
-	for i in range(_map_nodes.size()):
-		if _map_nodes[i]:
-			_map_nodes[i].visible = (i == map_index)
-
-func _init_data(map_index: int) -> void:
-	players = [Player.new("Joueur 1"), Player.new("Joueur 2")]
-
-	var map = MapDefs.MAPS[map_index]
-	forests    = map["forests"]
-	river_x    = map["river_x"]
-	bridge_y   = map["bridge_y"]
-	bridge_h   = map["bridge_h"]
-	has_water  = map["has_water"]
-	land_zones = map["land_zones"]
-
-	camps = []
-	for data in map["camps"]:
-		camps.append(Camp.new(data))
-
-# ── Boucle principale ────────────────────────────────────────────────────────
-func _process(_delta: float) -> void:
-	if map_chosen:
-		var p: Player = players[current_player]
-		var income = 0
-		var camps_owned = 0
-		for camp in camps:
-			if camp.owner == current_player:
-				income += camp.income
-				camps_owned += 1
-		var selected_unit = ""
-		if selected_idx != -1:
-			selected_unit = UnitDefs.TYPES[camps[selected_idx].unit_type]["label"]
-		ui.update_hud(p.name, turn, p.gold, income, camps_owned, selected_unit, message, current_player)
-	queue_redraw()
-
-# ── Dessin : délégué au Renderer ─────────────────────────────────────────────
-func _draw() -> void:
-	if not map_chosen:
-		return
-	_renderer.draw(self, font, camps, selected_idx,
-		forests, river_x, bridge_y, bridge_h,
-		has_water, land_zones, game_over, winner)
-
-# ── Entrées ──────────────────────────────────────────────────────────────────
-func _unhandled_input(event: InputEvent) -> void:
-	if not map_chosen or game_over:
-		return
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			_handle_click(event.position)
-	if event is InputEventKey:
-		if event.pressed and event.keycode == KEY_P:
-			_produce_unit()
-
-func _handle_click(pos: Vector2) -> void:
-	var clicked = _camp_at(pos)
-
-	if clicked == -1:
-		selected_idx = -1
-		ui.hide_recruit()
-		message = "%s — Sélectionnez un de vos camps" % players[current_player].name
-		return
-
-	if selected_idx == -1:
-		if camps[clicked].owner == current_player:
-			selected_idx = clicked
-			ui.show_recruit(camps[clicked])
-			message = "%s sélectionné — Cliquez une cible ou recrutez" % camps[clicked].name
-			Sound.play("select")
-		else:
-			message = "Ce camp ne vous appartient pas !"
-	else:
-		if clicked == selected_idx:
-			selected_idx = -1
-			ui.hide_recruit()
-		elif camps[clicked].owner == current_player:
-			_move_units(selected_idx, clicked)
-			selected_idx = -1
-			ui.hide_recruit()
-		else:
-			_attack(selected_idx, clicked)
-			selected_idx = -1
-			ui.hide_recruit()
-		_check_victory()
-
-# ── Actions du joueur ────────────────────────────────────────────────────────
-func _move_units(src: int, tgt: int) -> void:
-	if camps[src].units <= 1:
-		message = "Il faut au moins 2 unités pour se déplacer !"
-		return
-	var n = camps[src].units - 1
-	camps[tgt].units += n
-	camps[src].units = 1
-	message = "%d unités déplacées vers %s" % [n, camps[tgt].name]
-	Sound.play("move")
-
-func _attack(src: int, tgt: int) -> void:
-	if camps[src].units <= 1:
-		message = "Il faut au moins 2 unités pour attaquer !"
-		return
-	Combat.resolve(camps[src], camps[tgt])
-	message = "Attaque sur %s !" % camps[tgt].name
-	Sound.play("attack")
-
-func _produce_unit() -> void:
-	if selected_idx == -1:
-		message = "Sélectionnez d'abord un camp !"
-		return
-	if camps[selected_idx].owner != current_player:
-		return
-	var p: Player = players[current_player]
-	if p.gold < 10:
-		message = "Pas assez d'or ! (10 or requis)"
-		return
-	p.gold -= 10
-	camps[selected_idx].units += 1
-	message = "Unité produite à %s" % camps[selected_idx].name
-
-func _on_recruit(unit_type: String) -> void:
-	if selected_idx == -1:
-		return
-	var camp: Camp = camps[selected_idx]
-	if camp.owner != current_player:
-		return
-	if camp.queue.size() >= 3:
-		message = "File pleine ! (3 unités maximum en attente)"
-		return
-	var price = UnitDefs.TYPES[unit_type]["price"]
-	var p: Player = players[current_player]
-	if p.gold < price:
-		message = "Pas assez d'or ! (%d or requis)" % price
-		return
-	p.gold -= price
-	camp.queue.append(unit_type)
-	ui.show_recruit(camp)
-	message = "%s ajouté à la file de %s" % [UnitDefs.TYPES[unit_type]["label"], camp.name]
-	Sound.play("recruit")
-
-# ── Fin de tour ──────────────────────────────────────────────────────────────
-func _on_end_turn() -> void:
-	Sound.play("end_turn")
-	selected_idx = -1
-	ui.hide_recruit()
-	_process_queues(current_player)
-	current_player = 1 - current_player
-	if current_player == 0:
-		turn += 1
-	_collect_income(current_player)
-	message = "%s — Sélectionnez un de vos camps" % players[current_player].name
-	_check_victory()
-
-func _process_queues(p: int) -> void:
-	for camp in camps:
-		if camp.owner == p and camp.queue.size() > 0:
-			camp.unit_type = camp.queue[0]
-			camp.queue.remove_at(0)
-			camp.units += 1
-
-func _collect_income(p: int) -> void:
-	var player: Player = players[p]
-	for camp in camps:
-		if camp.owner == p:
-			player.gold += camp.income
-
-# ── Victoire ─────────────────────────────────────────────────────────────────
-func _check_victory() -> void:
-	var count = [0, 0]
-	for camp in camps:
-		if camp.owner == 0:
-			count[0] += 1
-		elif camp.owner == 1:
-			count[1] += 1
-	if count[0] == 0:
-		_end_game("Joueur 2")
-	elif count[1] == 0:
-		_end_game("Joueur 1")
-
-func _end_game(w: String) -> void:
-	game_over = true
-	winner    = w
-	message   = "VICTOIRE DE %s !" % w.to_upper()
-	ui.disable_end_btn()
-	ui.show_victory(w, turn)
-	Sound.play("victory")
-
-# ── Utilitaires ──────────────────────────────────────────────────────────────
-func _camp_at(pos: Vector2) -> int:
-	for i in range(camps.size()):
-		if camps[i].pos.distance_to(pos) <= CAMP_R:
-			return i
-	return -1
+func t(key: String) -> String:
+	if STRINGS[current].has(key):
+		return STRINGS[current][key]
+	return key

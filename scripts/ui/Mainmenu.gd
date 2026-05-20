@@ -58,10 +58,6 @@ func _build_main_menu() -> void:
 	var grid := _GridNode.new()
 	main_menu.add_child(grid)
 
-	# Scanlines
-	var scan := _ScanNode.new()
-	main_menu.add_child(scan)
-
 	# Bandes verticales decoratives
 	var band_colors : Array[Color] = [U.C_PINK, U.C_CYAN, U.C_GOLD, U.C_PURPLE, U.C_PINK]
 	for i in range(5):
@@ -72,23 +68,13 @@ func _build_main_menu() -> void:
 		s.rotation = deg_to_rad(8.0)
 		main_menu.add_child(s)
 
-	# Ombre du titre
-	var title_shadow : Label = Label.new()
-	title_shadow.text     = "SupSpy"
-	title_shadow.position = Vector2(6, 226)
-	title_shadow.size     = Vector2(U.WIN_W, 100)
-	title_shadow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_shadow.add_theme_font_size_override("font_size", 88)
-	title_shadow.modulate = Color(0.60, 0.05, 0.30, 0.50)
-	main_menu.add_child(title_shadow)
-
 	# Titre anime
 	title_label = Label.new()
-	title_label.text     = "SupSpy"
+	title_label.text     = "SupKonQuest"
 	title_label.position = Vector2(0, 220)
 	title_label.size     = Vector2(U.WIN_W, 100)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 88)
+	title_label.add_theme_font_size_override("font_size", 72)
 	title_label.modulate = U.C_PINK
 	main_menu.add_child(title_label)
 
@@ -162,7 +148,7 @@ func _build_main_menu() -> void:
 		_sparkles.append(star)
 
 	# Footer
-	var ft : Label = U.lbl("SupSpy  -  SUPINFO  -  2PROJ", Vector2(0, 698), 10, Color(0.40, 0.30, 0.55))
+	var ft : Label = U.lbl("SupKonQuest - Projet 2PROJ - SUPINFO", Vector2(0, 698), 10, Color(0.40, 0.30, 0.55))
 	ft.size = Vector2(U.WIN_W, 20)
 	ft.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	main_menu.add_child(ft)
@@ -380,14 +366,6 @@ func _build_compat_screens() -> void:
 	mode_screen       = U.make_screen(false); _parent.add_child(mode_screen)
 	difficulty_screen = U.make_screen(false); _parent.add_child(difficulty_screen)
 	squad_screen      = U.make_screen(false); _parent.add_child(squad_screen)
-
-
-class _ScanNode extends Node2D:
-	func _draw() -> void:
-		var y : int = 0
-		while y < 720:
-			draw_line(Vector2(0, y), Vector2(1152, y), Color(0.0,0.0,0.0,0.10), 1.0)
-			y += 4
 
 
 class _GridNode extends Node2D:
