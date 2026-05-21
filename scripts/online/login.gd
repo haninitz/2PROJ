@@ -76,10 +76,10 @@ func _build() -> void:
 	_btn_login.pressed.connect(_on_login_pressed)
 
 	_btn(panel, "Créer un compte agent", Vector2(30, 360), C_PURPLE).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/online/Register.tscn"))
+		func(): SceneLoader.goto("res://scenes/online/Register.tscn"))
 
 	_btn(panel, "← Retour", Vector2(30, 415), Color(0.30, 0.20, 0.45)).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/Main.tscn"))
+		func(): SceneLoader.goto("res://scenes/Main.tscn"))
 
 	_status = Label.new()
 	_status.position = Vector2(30, 458); _status.size = Vector2(380, 20)
@@ -136,12 +136,12 @@ func _on_login_success(token: String, pseudo: String, username: String, wins: in
 	GameConfig.token = token; GameConfig.username = username
 	GameConfig.steam_name = pseudo; GameConfig.wins = wins; GameConfig.losses = losses
 	_save_token(token)
-	get_tree().change_scene_to_file("res://scenes/online/OnlineMenu.tscn")
+	SceneLoader.goto("res://scenes/online/OnlineMenu.tscn")
 
 func _on_token_valid(pseudo: String, username: String, wins: int, losses: int) -> void:
 	GameConfig.token = _load_token(); GameConfig.username = username
 	GameConfig.steam_name = pseudo; GameConfig.wins = wins; GameConfig.losses = losses
-	get_tree().change_scene_to_file("res://scenes/online/OnlineMenu.tscn")
+	SceneLoader.goto("res://scenes/online/OnlineMenu.tscn")
 
 func _on_auth_error(message: String) -> void:
 	_status.text = "Erreur : %s" % message; _btn_login.disabled = false

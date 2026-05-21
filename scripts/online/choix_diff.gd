@@ -30,21 +30,21 @@ func _build() -> void:
 
 	_btn(panel, "★  RECRUE  (Facile)", Vector2(30, 120), C_CYAN).pressed.connect(
 		func(): GameConfig.diff = "easy"
-		       ; get_tree().change_scene_to_file("res://scenes/online/ChoixMap.tscn"))
+		       ; SceneLoader.goto("res://scenes/online/ChoixMap.tscn"))
 	_desc(panel, "L'IA attaque rarement et recrute peu", Vector2(30, 174))
 
 	_btn(panel, "★★  AGENTE  (Moyen)", Vector2(30, 200), C_PURPLE).pressed.connect(
 		func(): GameConfig.diff = "med"
-		       ; get_tree().change_scene_to_file("res://scenes/online/ChoixMap.tscn"))
+		       ; SceneLoader.goto("res://scenes/online/ChoixMap.tscn"))
 	_desc(panel, "L'IA gère ses troupes et sait attaquer", Vector2(30, 254))
 
 	_btn(panel, "★★★  SUPER AGENTE  (Difficile)", Vector2(30, 280), C_PINK).pressed.connect(
 		func(): GameConfig.diff = "hard"
-		       ; get_tree().change_scene_to_file("res://scenes/online/ChoixMap.tscn"))
+		       ; SceneLoader.goto("res://scenes/online/ChoixMap.tscn"))
 	_desc(panel, "L'IA est agressive et optimise ses revenus", Vector2(30, 334))
 
 	_btn(panel, "← Retour", Vector2(30, 370), Color(0.30, 0.20, 0.45)).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/online/ChoixMode.tscn"))
+		func(): SceneLoader.goto("res://scenes/online/ChoixMode.tscn"))
 
 func _desc(parent: Control, text: String, pos: Vector2) -> void:
 	var l := Label.new()

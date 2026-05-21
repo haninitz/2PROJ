@@ -45,6 +45,12 @@ var event_log         : RichTextLabel
 var _log_entries : Array = []
 var _lb_refresh_acc : float = 0.0
 
+# Notification région capturée
+var _notif_panel  : Panel = null
+var _notif_label  : Label = null
+var _notif_timer  : float = 0.0
+const NOTIF_DURATION : float = 3.0
+
 
 func setup(u: Node) -> void:
 	U = u
@@ -55,6 +61,7 @@ func setup(u: Node) -> void:
 	_build_selection_panel()
 	_connect_game_manager()
 	_build_minimap()
+	_build_notif_panel()
 
 
 func _ready() -> void:
@@ -67,6 +74,15 @@ func _process(delta: float) -> void:
 		_lb_refresh_acc = 0.0
 		refresh_leaderboard()
 	_refresh_stats()
+
+	# Notification région — fade out
+	if _notif_timer > 0.0:
+		_notif_timer -= delta
+		if _notif_timer <= 0.5:
+			_notif_panel.modulate.a = _notif_timer / 0.5
+		if _notif_timer <= 0.0:
+			_notif_panel.visible = false
+			_notif_panel.modulate.a = 1.0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -214,6 +230,24 @@ func _build_minimap() -> void:
 	_minimap = load("res://scripts/ui/Minimap.gd").new()
 	add_child(_minimap)
 	_minimap.setup()
+
+
+func _build_notif_panel() -> void:
+	_notif_panel          = Panel.new()
+	_notif_panel.position = Vector2(1152.0 / 2.0 - 280, 240)
+	_notif_panel.size     = Vector2(560, 80)
+	_notif_panel.visible  = false
+	_notif_panel.add_theme_stylebox_override("panel",
+		U.flat(Color(0.04, 0.02, 0.10, 0.92), U.C_GOLD, 2, 12))
+	add_child(_notif_panel)
+
+	_notif_label          = Label.new()
+	_notif_label.position = Vector2(0, 10)
+	_notif_label.size     = Vector2(560, 60)
+	_notif_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_notif_label.add_theme_font_size_override("font_size", 22)
+	_notif_label.add_theme_color_override("font_color", U.C_GOLD)
+	_notif_panel.add_child(_notif_label)
 
 
 
@@ -432,6 +466,13 @@ func _on_player_defeated(player) -> void:
 
 func _on_region_captured(region_name: String, player) -> void:
 	add_log("⭐ %s owns %s!" % [player.player_name.split(" ")[0], region_name])
+	# Notification visuelle centrale
+	if _notif_panel and _notif_label:
+		_notif_label.text   = "⭐  %s conquiert %s  ⭐" % [player.player_name.split(" ")[0], region_name]
+		_notif_panel.visible = true
+		_notif_panel.modulate.a = 1.0
+		_notif_timer = NOTIF_DURATION
+		Sound.play("capture")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

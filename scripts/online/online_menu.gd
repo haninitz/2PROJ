@@ -74,13 +74,13 @@ func _build() -> void:
 		func():
 			GameConfig.is_host = true
 			NetworkManager.create_server()
-			get_tree().change_scene_to_file("res://scenes/online/ChoixMode.tscn"))
+			SceneLoader.goto("res://scenes/online/ChoixMode.tscn"))
 
 	_btn(panel, "⟳  REJOINDRE UNE MISSION", Vector2(30, 240), C_PURPLE).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/online/ListeRooms.tscn"))
+		func(): SceneLoader.goto("res://scenes/online/ListeRooms.tscn"))
 
 	_btn(panel, "← Retour au menu principal", Vector2(30, 305), Color(0.30, 0.20, 0.45)).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/Main.tscn"))
+		func(): SceneLoader.goto("res://scenes/Main.tscn"))
 
 	_btn(panel, "Déconnexion", Vector2(30, 370), Color(0.40, 0.10, 0.20)).pressed.connect(
 		func():
@@ -88,7 +88,7 @@ func _build() -> void:
 			if FileAccess.file_exists("user://token.dat"):
 				DirAccess.remove_absolute("user://token.dat")
 			GameConfig.reset()
-			get_tree().change_scene_to_file("res://scenes/online/Login.tscn"))
+			SceneLoader.goto("res://scenes/online/Login.tscn"))
 
 func _flat(bg: Color, border: Color, bw: int, cr: int) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()

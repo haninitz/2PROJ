@@ -33,7 +33,7 @@ func _build() -> void:
 	_btn_create = _btn(panel, "→  LANCER LA MISSION", Vector2(30, 195), C_PINK)
 	_btn_create.pressed.connect(_on_create_pressed)
 	_btn(panel, "← Retour", Vector2(30, 258), Color(0.30, 0.20, 0.45)).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/online/ChoixMap.tscn"))
+		func(): SceneLoader.goto("res://scenes/online/ChoixMap.tscn"))
 
 	_status = Label.new(); _status.position = Vector2(30, 318); _status.size = Vector2(380, 20)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -60,7 +60,7 @@ func _on_room_registered(_room_name: String) -> void:
 	_status.text = "Mission créée !"
 	RoomManager.join_room_local(GameConfig.room_name, GameConfig.mode,
 		GameConfig.format, GameConfig.diff, GameConfig.map, GameConfig.steam_name)
-	get_tree().change_scene_to_file("res://scenes/online/SalleAttente.tscn")
+	SceneLoader.goto("res://scenes/online/SalleAttente.tscn")
 
 func _flat(bg: Color, border: Color, bw: int, cr: int) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new(); s.bg_color = bg; s.border_color = border

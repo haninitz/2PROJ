@@ -299,7 +299,7 @@ func hide_map_screen() -> void:
 
 
 func _open_multiplayer() -> void:
-	get_tree().change_scene_to_file("res://scenes/online/Login.tscn")
+	SceneLoader.goto("res://scenes/online/Login.tscn")
 
 
 func _open_leaderboard() -> void:

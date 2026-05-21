@@ -43,7 +43,7 @@ func _build() -> void:
 	_btn(panel, "→  LANCER LA MISSION", Vector2(30, 290), C_PINK).pressed.connect(
 		func(): _on_lancer_pressed())
 	_btn(panel, "← Retour", Vector2(30, 352), Color(0.30, 0.20, 0.45)).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/online/ChoixMap.tscn"))
+		func(): SceneLoader.goto("res://scenes/online/ChoixMap.tscn"))
 
 func _get_diff_label() -> String:
 	match GameConfig.diff:
@@ -68,8 +68,14 @@ func _btn(parent: Control, text: String, pos: Vector2, col: Color) -> Button:
 
 
 func _on_lancer_pressed() -> void:
+	var map_idx : int = 0
 	match GameConfig.map:
-		"clover": GameConfig.map = "0"
-		"sam":    GameConfig.map = "1"
-		"alex":   GameConfig.map = "2"
-	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+		"clover": map_idx = 0
+		"sam":    map_idx = 1
+		"alex":   map_idx = 2
+	SceneLoader.goto("res://scenes/Main.tscn")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var ui := get_tree().root.find_child("UI", true, false)
+	if ui and ui.has_method("start_from_online"):
+		ui.start_from_online(map_idx)

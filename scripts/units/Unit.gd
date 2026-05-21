@@ -63,11 +63,23 @@ const DAMAGE_MODIFIERS := {
 @onready var attack_timer: Timer          = $AttackTimer
 @onready var range_area: Area2D           = $RangeArea
 
+# Barre de vie flottante (créée par code)
+var _hp_bar_bg  : ColorRect = null
+var _hp_bar_fg  : ColorRect = null
+var _hp_label   : Label     = null
+
+const DAMAGE_NUMBER_SCENE := preload("res://scripts/ui/DamageNumber.gd")
+
+const HP_BAR_W  : float = 36.0
+const HP_BAR_H  : float = 5.0
+const HP_BAR_Y  : float = -28.0  # au-dessus de l'unité
+
 # ─────────────────────────────────────────────────────────────────────────────
 # INITIALISATION
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	hp = max_hp
+	add_to_group("units")  # pour minimap et Soigneur
 	attack_timer.wait_time = hit_speed
 	attack_timer.one_shot  = false
 
@@ -76,6 +88,9 @@ func _ready() -> void:
 	range_area.body_exited.connect(_on_range_exited)
 	attack_timer.timeout.connect(_on_attack_timer)
 
+	# Connecter le signal dégâts à la mise à jour de la barre + label flottant
+	unit_damaged.connect(_on_unit_damaged)
+
 	# Ajuster le rayon de la zone de portée selon attack_range
 	var shape = CircleShape2D.new()
 	shape.radius = attack_range if attack_range > 0 else 40.0
@@ -83,8 +98,55 @@ func _ready() -> void:
 	if collision is CollisionShape2D:
 		collision.shape = shape
 
-# ─────────────────────────────────────────────────────────────────────────────
-# DÉPLACEMENT — utilise NavigationAgent2D pour le pathfinding
+	# Créer la barre de vie flottante
+	_build_hp_bar()
+
+
+func _build_hp_bar() -> void:
+	# Fond gris
+	_hp_bar_bg          = ColorRect.new()
+	_hp_bar_bg.color    = Color(0.15, 0.15, 0.15, 0.85)
+	_hp_bar_bg.size     = Vector2(HP_BAR_W, HP_BAR_H)
+	_hp_bar_bg.position = Vector2(-HP_BAR_W / 2.0, HP_BAR_Y)
+	add_child(_hp_bar_bg)
+
+	# Barre verte (vie restante)
+	_hp_bar_fg          = ColorRect.new()
+	_hp_bar_fg.color    = Color(0.20, 0.90, 0.35)
+	_hp_bar_fg.size     = Vector2(HP_BAR_W, HP_BAR_H)
+	_hp_bar_fg.position = Vector2(-HP_BAR_W / 2.0, HP_BAR_Y)
+	add_child(_hp_bar_fg)
+
+
+func _update_hp_bar() -> void:
+	if _hp_bar_fg == null:
+		return
+	var ratio : float = clamp(get_hp_ratio(), 0.0, 1.0)
+	_hp_bar_fg.size.x = HP_BAR_W * ratio
+	# Couleur : vert → orange → rouge selon les PV
+	if ratio > 0.5:
+		_hp_bar_fg.color = Color(0.20, 0.90, 0.35)
+	elif ratio > 0.25:
+		_hp_bar_fg.color = Color(1.00, 0.65, 0.10)
+	else:
+		_hp_bar_fg.color = Color(0.90, 0.15, 0.15)
+
+func _on_unit_damaged(_unit: Unit, amount: float) -> void:
+	_update_hp_bar()
+	_spawn_damage_number(amount)
+
+
+func _spawn_damage_number(amount: float) -> void:
+	var dn : DamageNumber = DAMAGE_NUMBER_SCENE.new()
+	# Légère variation horizontale pour éviter la superposition si plusieurs hits simultanés
+	dn.position = Vector2(randf_range(-6.0, 6.0), HP_BAR_Y - 8.0)
+	# Dégât critique = multiplicateur appliqué → montant > damage de base
+	var is_critical : bool = amount > damage * 1.1
+	add_child(dn)
+	dn.setup(amount, is_critical)
+
+
+# ───────────────────────────────────────────────────────────────────────────── — utilise NavigationAgent2D pour le pathfinding
 # ─────────────────────────────────────────────────────────────────────────────
 func move_to(target_pos: Vector2) -> void:
 	if not is_alive:

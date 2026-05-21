@@ -38,15 +38,15 @@ func _build() -> void:
 
 func _on_multi_pressed() -> void:
 	GameConfig.mode = "multi"
-	get_tree().change_scene_to_file("res://scenes/online/ChoixFormat.tscn")
+	SceneLoader.goto("res://scenes/online/ChoixFormat.tscn")
 
 func _on_ai_pressed() -> void:
 	GameConfig.mode = "ai"
-	get_tree().change_scene_to_file("res://scenes/online/ChoixDiff.tscn")
+	SceneLoader.goto("res://scenes/online/ChoixDiff.tscn")
 
 func _on_back_pressed() -> void:
 	NetworkManager.disconnect_from_server()
-	get_tree().change_scene_to_file("res://scenes/online/OnlineMenu.tscn")
+	SceneLoader.goto("res://scenes/online/OnlineMenu.tscn")
 
 func _title(parent: Control, text: String, col: Color) -> void:
 	var l := Label.new()

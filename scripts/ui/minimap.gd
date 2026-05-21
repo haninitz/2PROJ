@@ -41,8 +41,29 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	var font : Font = ThemeDB.fallback_font
 
+	var main : Node = get_tree().get_first_node_in_group("main_node")
+	if main == null:
+		main = get_node_or_null("/root/Main")
+
+	var has_data : bool = main != null and main.get("camps") and main.camps.size() > 0
+
 	# Fond
+	draw_rect(Rect2(0, 0, MINI_W, MINI_H), Color(0.06, 0.10, 0.06, 0.90 if has_data else 0.0))
+	
+	# Fond — toujours visible
 	draw_rect(Rect2(0, 0, MINI_W, MINI_H), Color(0.06, 0.10, 0.06, 0.90))
+
+	# Bordure rose — toujours visible
+	draw_rect(Rect2(0, 0, MINI_W, MINI_H),
+		Color(1.00, 0.20, 0.58, 0.70), false, 1.5)
+
+	# Label — toujours visible
+	draw_string(font, Vector2(2, -3), "MINIMAP",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 8,
+		Color(1.0, 0.20, 0.58, 0.60))
+
+	if not has_data:
+		return
 
 	# Grille légère
 	var grid_col := Color(0.20, 0.30, 0.20, 0.20)
@@ -55,15 +76,8 @@ func _draw() -> void:
 		draw_line(Vector2(0, gy), Vector2(MINI_W, gy), grid_col, 0.5)
 		gy += MINI_H / 3.0
 
-	# Récupère les camps depuis Main.gd
-	var main : Node = get_tree().get_first_node_in_group("main_node")
-	if main == null:
-		# Fallback: cherche via arbre de scène
-		main = get_node_or_null("/root/Main")
-	
-	if main and main.get("camps"):
-		var camps : Array = main.camps
-		for camp in camps:
+	var camps : Array = main.camps
+	for camp in camps:
 			if not camp:
 				continue
 			var pos   : Vector2 = camp.pos
@@ -81,11 +95,20 @@ func _draw() -> void:
 			draw_arc(Vector2(mx, my), 3.5, 0, TAU, 8,
 				Color(col.r, col.g, col.b, 0.50), 1.0)
 
-	# Bordure rose
-	draw_rect(Rect2(0, 0, MINI_W, MINI_H),
-		Color(1.00, 0.20, 0.58, 0.70), false, 1.5)
-
-	# Label
-	draw_string(font, Vector2(2, -3), "MINIMAP",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 8,
-		Color(1.0, 0.20, 0.58, 0.60))
+	# Unités — petits points par owner_id
+	var units := get_tree().get_nodes_in_group("units")
+	for unit in units:
+		if not is_instance_valid(unit):
+			continue
+		if not unit.get("is_alive") or not unit.is_alive:
+			continue
+		var upos : Vector2 = unit.global_position
+		var ux   : float   = upos.x * SCALE_X
+		var uy   : float   = upos.y * SCALE_Y
+		var uid  : int     = unit.get("owner_id") if unit.get("owner_id") != null else -1
+		var ucol : Color   = C_NEUTRAL
+		if uid == 0:
+			ucol = C_P1
+		elif uid == 1:
+			ucol = C_P2
+		draw_circle(Vector2(ux, uy), 1.5, ucol)

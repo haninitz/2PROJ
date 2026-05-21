@@ -1,11 +1,14 @@
 [gd_scene format=3 uid="uid://b3x3inbascfp0"]
 
+[ext_resource type="Script" uid="uid://okutlgl12lu5" path="res://scripts/units/Soigneur.gd" id="1_ptnda"]
+
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_q3nu0"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ptnda"]
 radius = 0.01
 
 [node name="Soigneur" type="CharacterBody2D" unique_id=1676996802]
+script = ExtResource("1_ptnda")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=444062310]
 

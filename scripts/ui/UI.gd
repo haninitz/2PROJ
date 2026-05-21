@@ -65,6 +65,7 @@ func _ready() -> void:
 	_menu.map_selected.connect(func(i : int):
 		_game_started = true
 		_hud.show_hud()
+		_show_map(i)
 		map_selected.emit(i))
 	_menu.mode_selected.connect(func(a : bool, d : String): mode_selected.emit(a, d))
 	_menu.squads_selected.connect(func(a : String, b : String): squads_selected.emit(a, b))
@@ -163,13 +164,6 @@ func _get_turn_screen()       -> Panel: return _victory.turn_screen    if _victo
 
 
 func _on_splash_finished() -> void:
-	# Vient-on du flow online (recap_ia) ?
-	var gc := get_node_or_null("/root/GameConfig")
-	if gc and gc.get("map") in ["0", "1", "2"]:
-		var map_idx : int = int(gc.map)
-		gc.map = ""
-		start_from_online(map_idx)
-		return
 	if _menu and _menu.main_menu:
 		_menu.main_menu.visible = true
 

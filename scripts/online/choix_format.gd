@@ -64,10 +64,10 @@ func _build() -> void:
 
 func _select(f: String) -> void:
 	GameConfig.format = f
-	get_tree().change_scene_to_file("res://scenes/online/ChoixMap.tscn")
+	SceneLoader.goto("res://scenes/online/ChoixMap.tscn")
 
 func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/online/ChoixMode.tscn")
+	SceneLoader.goto("res://scenes/online/ChoixMode.tscn")
 
 func _desc(parent: Control, text: String, pos: Vector2) -> void:
 	var l := Label.new()

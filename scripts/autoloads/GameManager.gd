@@ -4,6 +4,12 @@ class_name GameManager
 const PlayerScript = preload("res://scripts/Player.gd")
 const CampScript = preload("res://scripts/Camp.gd")
 
+signal camp_captured(camp, old_owner, new_owner)
+signal income_distributed(player, amount)
+signal player_defeated(player)
+signal region_captured(region_name, player)
+signal game_over(winner)
+
 var players = []
 var camps = []
 
@@ -179,6 +185,7 @@ func check_regions() -> void:
 					player.add_gold(region["bonus_gold"])
 					print("Region ", region["name"], " captured by ", player.player_name,
 						" ! Bonus: +", region["bonus_gold"], " gold")
+					region_captured.emit(region["name"], player)
 
 			_owned_regions[rid] = owner_id
 

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dafgendetxbn1"]
 
-[ext_resource type="Script" uid="uid://cfj1co24kfnf6" path="res://scripts/units/AntiBlindage.gd" id="1_nb1js"]
+[ext_resource type="Script" uid="uid://ddr03aphon0jw" path="res://scripts/units/Antiblindage.gd" id="1_nb1js"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_17vjx"]
 

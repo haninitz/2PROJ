@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c7sxefxwk27f6"]
 
-[ext_resource type="Script" uid="uid://bvufttga8m1gt" path="res://scripts/units/Mortier.gd" id="1_e1hy5"]
+[ext_resource type="Script" uid="uid://b82tplrh4a1fi" path="res://scripts/units/Mortier.gd" id="1_e1hy5"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_c6tmi"]
 

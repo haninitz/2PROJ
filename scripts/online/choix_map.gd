@@ -49,16 +49,16 @@ func _build() -> void:
 	_btn(panel, "← Retour", Vector2(30, y + 10), Color(0.30, 0.20, 0.45)).pressed.connect(
 		func():
 			if GameConfig.mode == "multi":
-				get_tree().change_scene_to_file("res://scenes/online/ChoixFormat.tscn")
+				SceneLoader.goto("res://scenes/online/ChoixFormat.tscn")
 			else:
-				get_tree().change_scene_to_file("res://scenes/online/ChoixDiff.tscn"))
+				SceneLoader.goto("res://scenes/online/ChoixDiff.tscn"))
 
 func _select(map_id: String) -> void:
 	GameConfig.map = map_id
 	if GameConfig.mode == "multi":
-		get_tree().change_scene_to_file("res://scenes/online/NomRoom.tscn")
+		SceneLoader.goto("res://scenes/online/NomRoom.tscn")
 	else:
-		get_tree().change_scene_to_file("res://scenes/online/RecapIA.tscn")
+		SceneLoader.goto("res://scenes/online/RecapIA.tscn")
 
 func _flat(bg: Color, border: Color, bw: int, cr: int) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()

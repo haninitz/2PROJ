@@ -55,7 +55,7 @@ func _build() -> void:
 	btn_back.custom_minimum_size = Vector2(190, 46)
 	btn_back.add_theme_stylebox_override("normal", _flat(Color(0.12,0.08,0.18), C_PURPLE, 2, 8))
 	btn_back.add_theme_color_override("font_color", C_WHITE)
-	btn_back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/online/OnlineMenu.tscn"))
+	btn_back.pressed.connect(func(): SceneLoader.goto("res://scenes/online/OnlineMenu.tscn"))
 	hb.add_child(btn_back)
 
 	_status = Label.new(); _status.position = Vector2(20, 530); _status.size = Vector2(600, 22)
@@ -140,7 +140,7 @@ func _connect_to_host(resolved_ip: String) -> void:
 	NetworkManager.join_server_with_port(final_ip, final_port)
 
 func _on_connected() -> void:
-	get_tree().change_scene_to_file("res://scenes/online/SalleAttente.tscn")
+	SceneLoader.goto("res://scenes/online/SalleAttente.tscn")
 func _on_connection_fail() -> void: _status.text = "Connexion échouée — réessaie"
 func _on_room_not_found() -> void: _status.text = "Mission introuvable !"
 

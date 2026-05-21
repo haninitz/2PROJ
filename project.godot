@@ -27,6 +27,7 @@ GameConfig="*uid://b0nuiqjdw5mef"
 NetworkManager="*uid://iojwwur0tuch"
 Matchmaker="*uid://bms3lvsxwuqk6"
 RoomManager="*uid://1yqm66fc62pl"
+SceneLoader="*uid://bgf8xu4vq1018"
 
 [display]
 

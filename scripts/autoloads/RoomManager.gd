@@ -132,7 +132,7 @@ func _start_game(room_id: String) -> void:
 	#    puis l hote change de scene
 	await get_tree().process_frame
 	await get_tree().process_frame
-	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+	SceneLoader.goto("res://scenes/Main.tscn")
 
 func _broadcast_list(room_id: String) -> void:
 	if not rooms.has(room_id):
@@ -183,7 +183,7 @@ func _do_start(mode: String, format: String, diff: String,
 	GameConfig.players.clear()
 	for p in players_data:
 		GameConfig.players[p.id] = p
-	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+	SceneLoader.goto("res://scenes/Main.tscn")
 
 func _format_to_max(format: String) -> int:
 	match format:

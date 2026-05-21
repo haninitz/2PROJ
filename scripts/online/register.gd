@@ -77,7 +77,7 @@ func _build() -> void:
 	_btn_register.pressed.connect(_on_register_pressed)
 
 	_btn(panel, "← Retour connexion", Vector2(30, 458), Color(0.30, 0.20, 0.45)).pressed.connect(
-		func(): get_tree().change_scene_to_file("res://scenes/online/Login.tscn"))
+		func(): SceneLoader.goto("res://scenes/online/Login.tscn"))
 
 	_status = Label.new()
 	_status.position = Vector2(30, 515); _status.size = Vector2(380, 20)
@@ -144,7 +144,7 @@ func _on_register_success(token: String, pseudo: String, username: String) -> vo
 	if f: f.store_string(token); f.close()
 	_status.text = "Bienvenue agente %s !" % pseudo
 	await get_tree().create_timer(1.0).timeout
-	get_tree().change_scene_to_file("res://scenes/online/OnlineMenu.tscn")
+	SceneLoader.goto("res://scenes/online/OnlineMenu.tscn")
 
 func _on_auth_error(message: String) -> void:
 	_status.text = "Erreur : %s" % message; _btn_register.disabled = false
