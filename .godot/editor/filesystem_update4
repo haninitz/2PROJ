@@ -6,3 +6,8 @@ res://scripts/ui/UI.gd
 res://scenes/Main.tscn
 res://scripts/ui/Lang.gd
 res://scripts/Main.gd
+res://scripts/Camp_hani.gd
+res://scripts/ui/Hud.gd
+res://scripts/NavBaker.gd
+res://scripts/ui/Victoryscreen.gd
+res://scripts/ui/Sound.gd

@@ -38,6 +38,7 @@ var camp_label    : Label
 var recruit_btns  : Array = []
 var selection_panel   : PanelContainer
 var unit_count_label  : Label
+var unit_stats_label  : Label
 var spell_button      : Button
 var event_log         : RichTextLabel
 
@@ -163,7 +164,10 @@ func _build_recruit_bar() -> void:
 			U.flat(Color(0.10, 0.04, 0.18), U.C_PINK, 2, 6))
 		b.add_theme_color_override("font_color", U.C_WHITE)
 		var t : String = unit_type
-		b.pressed.connect(func(): recruit_pressed.emit(t))
+		b.set_meta("unit_type", t)
+		b.pressed.connect(func():
+			Sound.play("recruit")
+			recruit_pressed.emit(t))
 		recruit_bar.add_child(b)
 		recruit_btns.append(b)
 		x += U.BTN_W + 2
@@ -172,12 +176,15 @@ func _build_recruit_bar() -> void:
 func _build_selection_panel() -> void:
 	selection_panel          = PanelContainer.new()
 	selection_panel.position = Vector2(10, U.MAP_H - 140)
-	selection_panel.size     = Vector2(300, 60)
+	selection_panel.size     = Vector2(320, 80)
 	selection_panel.visible  = false
 	add_child(selection_panel)
 
+	var vb : VBoxContainer = VBoxContainer.new()
+	selection_panel.add_child(vb)
+
 	var hb : HBoxContainer = HBoxContainer.new()
-	selection_panel.add_child(hb)
+	vb.add_child(hb)
 
 	unit_count_label      = Label.new()
 	unit_count_label.text = ""
@@ -188,6 +195,14 @@ func _build_selection_panel() -> void:
 	spell_button.visible = false
 	spell_button.pressed.connect(_on_spell_pressed)
 	hb.add_child(spell_button)
+
+	# Ligne stats (visible seulement si 1 unité sélectionnée)
+	unit_stats_label          = Label.new()
+	unit_stats_label.text     = ""
+	unit_stats_label.visible  = false
+	unit_stats_label.add_theme_font_size_override("font_size", 11)
+	unit_stats_label.modulate = Color(0.80, 0.90, 1.0)
+	vb.add_child(unit_stats_label)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -313,7 +328,25 @@ func show_recruit(camp) -> void:
 		for e in camp.production_queue:
 			parts.append(e["unit_type"])
 		q = " → ".join(parts)
-	camp_label.text    = "%s  |  Queue: %s" % [camp.camp_name, q]
+	camp_label.text = "%s  |  Queue: %s" % [camp.camp_name, q]
+
+	# Affiche uniquement les unités adaptées au camp
+	var ud : Node = get_node_or_null("/root/UnitDefs")
+	var is_port : bool = camp.get("is_port") == true
+	var allowed : Array = []
+	if ud:
+		if is_port:
+			allowed = ud.get_sea_units()
+		else:
+			allowed = ud.get_land_units()
+
+	for b in recruit_btns:
+		if not is_instance_valid(b):
+			continue
+		# Retrouve le type via le texte du bouton (stocké en metadata)
+		var unit_type : String = b.get_meta("unit_type") if b.has_meta("unit_type") else ""
+		b.visible = allowed.is_empty() or unit_type in allowed
+
 	recruit_bar.visible = true
 
 
@@ -333,6 +366,23 @@ func update_selection_panel(selected_units: Array) -> void:
 			has_spell = true
 			break
 	spell_button.visible = has_spell
+
+	# Stats — seulement si 1 unité sélectionnée
+	if selected_units.size() == 1:
+		var u = selected_units[0]
+		if is_instance_valid(u):
+			var hp_val    : float = u.get("hp")     if u.get("hp")     != null else 0.0
+			var max_hp    : float = u.get("max_hp") if u.get("max_hp") != null else 0.0
+			var dmg       : float = u.get("damage") if u.get("damage") != null else 0.0
+			var spd       : float = u.get("speed")  if u.get("speed")  != null else 0.0
+			var rng       : float = u.get("attack_range") if u.get("attack_range") != null else 0.0
+			var utype     : String = str(u.get("unit_type")) if u.get("unit_type") != null else "?"
+			var rng_str   : String = "melee" if rng <= 0.0 else "%.0f" % rng
+			unit_stats_label.text    = "HP %d/%d  •  DMG %.0f  •  SPD %.0f  •  RNG %s  •  %s" % [
+				int(hp_val), int(max_hp), dmg, spd, rng_str, utype]
+			unit_stats_label.visible = true
+	else:
+		unit_stats_label.visible = false
 
 
 func add_log(message: String) -> void:

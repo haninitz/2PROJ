@@ -24,9 +24,8 @@ func _ready():
 
 func change_owner(new_owner_id):
 	owner_id = new_owner_id
-	
 	current_hp = max_hp
-	
+	Sound.play("capture")
 	print(camp_name, " has been secured by team ", owner_id)
 
 func is_neutral():

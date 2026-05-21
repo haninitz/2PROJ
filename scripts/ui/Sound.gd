@@ -6,6 +6,7 @@ extends Node
 const RATE = 22050
 
 var _players: Dictionary = {}
+var _music_player : AudioStreamPlayer = null
 
 func _ready() -> void:
 	_add("select",       _snd_select(),       -10.0)
@@ -18,6 +19,7 @@ func _ready() -> void:
 	_add("capture",      _snd_capture(),       -6.0)
 	_add("defeat",       _snd_defeat(),        -5.0)
 	_add("ui_click",     _snd_ui_click(),     -12.0)
+	_start_music()
 
 func play(name: String) -> void:
 	if _players.has(name):
@@ -197,4 +199,72 @@ func _snd_victory() -> AudioStreamWAV:
 		var s     = sin(TAU * freq * t) * 0.65
 		s        += sin(TAU * freq * 2.0 * t) * 0.20
 		buf[i]    = s * env * 0.70
+	return _pcm(buf)
+
+
+# =============================================================================
+#  MUSIQUE DE FOND — boucle générée procéduralement
+# =============================================================================
+
+func _start_music() -> void:
+	_music_player = AudioStreamPlayer.new()
+	_music_player.stream    = _snd_music()
+	_music_player.volume_db = -14.0
+	_music_player.autoplay  = true
+
+	# Connecte au bus Music si disponible
+	var bus_idx : int = AudioServer.get_bus_index("Music")
+	if bus_idx >= 0:
+		_music_player.bus = "Music"
+
+	add_child(_music_player)
+
+	# Boucle infinie
+	_music_player.finished.connect(func(): _music_player.play())
+
+
+func _snd_music() -> AudioStreamWAV:
+	# Boucle ambient de 8 secondes
+	# Arpège pentatonique lent : C4 E4 G4 A4 C5
+	var notes : Array = [261.63, 329.63, 392.00, 440.00, 523.25]
+	var bpm    : float = 72.0
+	var beat   : float = 60.0 / bpm
+	var n_beats : int  = 16
+	var total  : int   = int(RATE * beat * n_beats)
+	var buf    := PackedFloat32Array()
+	buf.resize(total)
+
+	# Pattern : [note_idx, beat_offset, duration_beats]
+	var pattern : Array = [
+		[0, 0,  2], [2, 2,  2], [1, 4,  2], [3, 6,  2],
+		[4, 8,  2], [2, 10, 2], [0, 12, 2], [1, 14, 2],
+	]
+
+	for p in pattern:
+		var freq     : float = notes[p[0]]
+		var start    : int   = int(p[1] * beat * RATE)
+		var duration : int   = int(p[2] * beat * RATE * 0.85)
+		for i in range(duration):
+			if start + i >= total:
+				break
+			var t   : float = float(i) / RATE
+			var env : float = _env(i, duration, 0.05, 0.40)
+			# Son de type piano simple (fondamentale + harmoniques)
+			var s : float = sin(TAU * freq * t)       * 0.55
+			s            += sin(TAU * freq * 2.0 * t) * 0.20
+			s            += sin(TAU * freq * 3.0 * t) * 0.08
+			buf[start + i] += s * env * 0.35
+
+	# Basse lente (C3 toutes les 4 mesures)
+	var bass_freq : float = 130.81
+	for beat_i in [0, 4, 8, 12]:
+		var start : int   = int(beat_i * beat * RATE)
+		var dur   : int   = int(beat * RATE * 1.8)
+		for i in range(dur):
+			if start + i >= total:
+				break
+			var t   : float = float(i) / RATE
+			var env : float = _env(i, dur, 0.02, 0.55)
+			buf[start + i] += sin(TAU * bass_freq * t) * env * 0.25
+
 	return _pcm(buf)

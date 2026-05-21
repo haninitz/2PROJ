@@ -28,10 +28,12 @@ const C_PATH       := Color(0.22, 0.25, 0.20)
 const C_SHADOW     := Color(0.0, 0.0, 0.0, 0.22)
 
 var _tex_plant : Texture2D = null
+var NavBaker = load("res://scripts/NavBaker.gd")
 
 func _ready() -> void:
 	_tex_plant = load("res://assets/tilesets/cainos/TX Plant.png")
 	_spawn_trees()
+	_setup_nav()
 
 func _process(_delta: float) -> void:
 	queue_redraw()
@@ -250,3 +252,39 @@ func _spawn_trees() -> void:
 		sp.centered = true
 		sp.modulate = Color(0.75, 1.0, 0.60)
 		add_child(sp)
+
+
+# =============================================================================
+#  NAVIGATION
+# =============================================================================
+func _setup_nav() -> void:
+	var m : float = 30.0
+	var outline : PackedVector2Array = NavBaker.make_rect(m, m, MAP_W - m * 2.0, MAP_H - m * 2.0)
+	var holes : Array = []
+
+	# Lacs
+	holes.append(NavBaker.make_ellipse(280, 180, 65, 40))
+	holes.append(NavBaker.make_ellipse(820, 160, 55, 35))
+	holes.append(NavBaker.make_ellipse(500, 470, 70, 38))
+	holes.append(NavBaker.make_ellipse(180, 440, 50, 32))
+	holes.append(NavBaker.make_ellipse(900, 430, 55, 35))
+
+	# Bases tech
+	holes.append(NavBaker.make_rect(436, 200, 140, 110))
+	holes.append(NavBaker.make_rect(35,   58, 110,  85))
+	holes.append(NavBaker.make_rect(865,  88, 110,  85))
+	holes.append(NavBaker.make_rect(60,  420, 100,  80))
+	holes.append(NavBaker.make_rect(878, 405, 105,  80))
+
+	# Arbres de bordure
+	for p in [Vector2(60,50),Vector2(130,30),Vector2(250,60),Vector2(380,30),
+			  Vector2(520,50),Vector2(680,40),Vector2(820,55),Vector2(960,35),
+			  Vector2(1090,60),Vector2(40,200),Vector2(100,300),Vector2(60,420),
+			  Vector2(1110,200),Vector2(1060,320),Vector2(1100,430),
+			  Vector2(280,580),Vector2(420,600),Vector2(580,590),
+			  Vector2(740,595),Vector2(900,580),Vector2(1040,590)]:
+		holes.append(NavBaker.make_circle(p.x, p.y, 28.0))
+
+	var b = load("res://scripts/NavBaker.gd").new()
+	add_child(b)
+	b.bake(outline, holes)

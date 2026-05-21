@@ -26,6 +26,9 @@ var victory_title    : Label
 var victory_winner   : Label
 var victory_sparkles : Array = []
 
+# ── Écran défaite ─────────────────────────────────────────────────────────────
+var defeat_screen  : Panel
+
 # ── Écran de tour ─────────────────────────────────────────────────────────────
 var turn_screen       : Panel
 var turn_name_label   : Label
@@ -41,6 +44,7 @@ func initialize(parent: Node, u: Node) -> void:
 	U = u
 	_parent = parent
 	_build_victory_screen()
+	_build_defeat_screen()
 	_build_turn_screen()
 
 
@@ -175,6 +179,69 @@ func _build_victory_screen() -> void:
 		})
 
 
+func _build_defeat_screen() -> void:
+	defeat_screen = U.make_screen(false)
+	var ov := StyleBoxFlat.new()
+	ov.bg_color = Color(0.0, 0.0, 0.0, 0.88)
+	defeat_screen.add_theme_stylebox_override("panel", ov)
+	_parent.add_child(defeat_screen)
+
+	# Panneau central sombre
+	var panel := Panel.new()
+	panel.position = Vector2(U.WIN_W / 2 - 360, 120)
+	panel.size     = Vector2(720, 440)
+	panel.add_theme_stylebox_override("panel",
+		U.flat(Color(0.10, 0.02, 0.02), Color(0.60, 0.10, 0.10), 3, 16))
+	defeat_screen.add_child(panel)
+
+	U.add_badge(defeat_screen, "MISSION  FAILED",
+		Vector2(U.WIN_W / 2 - 100, 130), Vector2(200, 26), Color(0.70, 0.15, 0.15))
+
+	# Titre
+	var title := Label.new()
+	title.text     = "✖  DEFEAT  ✖"
+	title.position = Vector2(U.WIN_W / 2 - 360, 168)
+	title.size     = Vector2(720, 90)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 60)
+	title.modulate = Color(0.85, 0.20, 0.20)
+	defeat_screen.add_child(title)
+
+	# Sous-titre
+	var sub := Label.new()
+	sub.name     = "WinnerLabel"
+	sub.text     = ""
+	sub.position = Vector2(U.WIN_W / 2 - 360, 268)
+	sub.size     = Vector2(720, 55)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override("font_size", 28)
+	sub.modulate = Color(0.80, 0.55, 0.55)
+	defeat_screen.add_child(sub)
+
+	defeat_screen.add_child(U.lbl(
+		"Your territory has been lost",
+		Vector2(U.WIN_W / 2 - 360, 328), 14, Color(0.55, 0.35, 0.35)))
+
+	# Boutons
+	var rb : Button = U.btn("↺  Try Again",
+		Vector2(U.WIN_W / 2 - 240, 510), Vector2(200, 55), 20)
+	rb.add_theme_stylebox_override("normal",
+		U.flat(Color(0.18, 0.05, 0.05), Color(0.60, 0.15, 0.15), 2, 10))
+	rb.add_theme_color_override("font_color", U.C_WHITE)
+	rb.pressed.connect(func(): _parent.get_tree().reload_current_scene())
+	defeat_screen.add_child(rb)
+
+	var qb : Button = U.btn("✕  Quit",
+		Vector2(U.WIN_W / 2 + 40, 510), Vector2(200, 55), 20)
+	qb.add_theme_stylebox_override("normal",
+		U.flat(Color(0.12, 0.04, 0.04), Color(0.45, 0.10, 0.10), 2, 10))
+	qb.add_theme_color_override("font_color", U.C_WHITE)
+	qb.pressed.connect(func(): _parent.get_tree().quit())
+	defeat_screen.add_child(qb)
+
+	defeat_screen.visible = false
+
+
 func _build_turn_screen() -> void:
 	turn_screen = U.make_screen(false)
 	turn_screen.add_theme_stylebox_override("panel",
@@ -208,9 +275,30 @@ func _build_turn_screen() -> void:
 # ─────────────────────────────────────────────────────────────────────────────
 
 func show_victory(winner_name: String, _turns: int) -> void:
-	victory_winner.text     = winner_name
-	victory_winner.modulate = U.C_PINK
-	victory_screen.visible  = true
+	# Récupère le nom du joueur local
+	var gm = _parent.get_node_or_null("/root/GameManager")
+	var local_player_name : String = ""
+	if gm and gm.players.size() > 0:
+		local_player_name = gm.players[0].player_name
+
+	if local_player_name != "" and local_player_name != winner_name:
+		# Ce joueur a perdu
+		_show_defeat(winner_name)
+	else:
+		# Ce joueur a gagné
+		victory_winner.text     = winner_name
+		victory_winner.modulate = U.C_PINK
+		victory_screen.visible  = true
+		Sound.play("victory")
+
+
+func _show_defeat(winner_name: String) -> void:
+	defeat_screen.visible = true
+	Sound.play("defeat")
+	# Met à jour le label du gagnant dans l'écran défaite
+	var lbl : Label = defeat_screen.get_node_or_null("WinnerLabel")
+	if lbl:
+		lbl.text = winner_name + " has won"
 
 
 func show_turn_screen(squad_name: String, turn_number: int) -> void:

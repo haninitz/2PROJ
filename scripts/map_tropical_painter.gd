@@ -49,11 +49,13 @@ const ISLANDS := [
 ]
 
 var _tex_plant : Texture2D = null
+var NavBaker = load("res://scripts/NavBaker.gd")
 
 
 func _ready() -> void:
 	_tex_plant = load("res://assets/tilesets/cainos/TX Plant.png")
 	_spawn_trees()
+	_setup_nav()
 
 
 func _process(_delta: float) -> void:
@@ -318,3 +320,29 @@ func _spawn_trees() -> void:
 func _noise(angle: float) -> float:
 	return (sin(angle*4.0)*0.07 + sin(angle*8.0)*0.04 +
 			cos(angle*6.0)*0.05 + cos(angle*11.0)*0.03)
+
+
+# =============================================================================
+#  NAVIGATION
+# =============================================================================
+func _setup_nav() -> void:
+	# Chaque île = sa propre NavigationRegion2D
+	for isl in ISLANDS:
+		var b = load("res://scripts/NavBaker.gd").new()
+		add_child(b)
+		var cx : float = isl["cx"]
+		var cy : float = isl["cy"]
+		var rx : float = isl["rx"]
+		var ry : float = isl["ry"]
+		var outline : PackedVector2Array = NavBaker.make_ellipse(cx, cy, rx - 12.0, ry - 12.0, 40)
+		var holes : Array = []
+		if isl["main"]:
+			# Bâtiment central + arbres île principale
+			holes.append(NavBaker.make_rect(cx - 70, cy - 55, 140, 110))
+			for p in [Vector2(240,220),Vector2(300,180),Vector2(360,200),
+					  Vector2(430,190),Vector2(480,225),Vector2(260,310),
+					  Vector2(320,350),Vector2(420,360),Vector2(480,300)]:
+				holes.append(NavBaker.make_circle(p.x, p.y, 18.0))
+		else:
+			holes.append(NavBaker.make_circle(cx, cy - ry * 0.3, 16.0))
+		b.bake(outline, holes)

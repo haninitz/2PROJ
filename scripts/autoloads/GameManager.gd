@@ -8,6 +8,10 @@ var players = []
 var camps = []
 
 var player_count = 2
+var map_index : int = 0
+
+# Régions : region_id -> player_id qui la possède (-1 = personne)
+var _owned_regions : Dictionary = {}
 
 var available_teams = [
 	{
@@ -99,10 +103,10 @@ func assign_starting_camps():
 		player.add_camp(camp)
 
 func give_income():
+	Sound.play("income_chime")
 	for player in players:
 		var total_income = calculate_player_income(player)
 		player.add_gold(total_income)
-		
 		print(player.player_name, " gains ", total_income, " gold from controlled territory. Total gold: ", player.gold)
 
 func calculate_player_income(player):
@@ -117,15 +121,16 @@ func calculate_player_income(player):
 func capture_camp(camp, new_owner_id):
 	var old_owner = find_player_by_id(camp.owner_id)
 	var new_owner = find_player_by_id(new_owner_id)
-	
+
 	if old_owner != null:
 		old_owner.remove_camp(camp)
-	
+
 	camp.change_owner(new_owner_id)
-	
+
 	if new_owner != null:
 		new_owner.add_camp(camp)
-	
+
+	check_regions()
 	check_end_game()
 
 func find_player_by_id(player_id):
@@ -144,3 +149,54 @@ func check_end_game():
 	
 	if alive_players.size() == 1:
 		print(alive_players[0].player_name, " wins the operation and controls the territory!")
+
+# =============================================================================
+#  RÉGIONS
+# =============================================================================
+
+func check_regions() -> void:
+	var RegionDefs = load("res://scripts/RegionDefs.gd")
+	var regions : Array = RegionDefs.get_regions(map_index)
+
+	for region in regions:
+		var rid : int = region["id"]
+		var camp_ids : Array = region["camp_ids"]
+
+		# Trouve quel joueur possède tous les camps de cette région
+		var owner_id : int = _get_region_owner(camp_ids)
+
+		var prev_owner : int = _owned_regions.get(rid, -1)
+
+		if owner_id != prev_owner:
+			# Un joueur vient de perdre la région
+			if prev_owner != -1:
+				print("Region ", region["name"], " lost by player ", prev_owner)
+
+			# Un joueur vient de conquérir la région
+			if owner_id != -1:
+				var player = find_player_by_id(owner_id)
+				if player:
+					player.add_gold(region["bonus_gold"])
+					print("Region ", region["name"], " captured by ", player.player_name,
+						" ! Bonus: +", region["bonus_gold"], " gold")
+
+			_owned_regions[rid] = owner_id
+
+
+func _get_region_owner(camp_ids: Array) -> int:
+	if camp_ids.is_empty():
+		return -1
+
+	var first_owner : int = -2  # valeur sentinelle
+
+	for camp in camps:
+		if camp.camp_id in camp_ids:
+			if first_owner == -2:
+				first_owner = camp.owner_id
+			elif camp.owner_id != first_owner:
+				return -1  # pas tous au même joueur
+
+	if first_owner == -2 or first_owner == -1:
+		return -1
+
+	return first_owner

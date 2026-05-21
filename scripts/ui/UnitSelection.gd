@@ -192,6 +192,7 @@ func _add_to_selection(unit: Node) -> void:
 		return
 	selected_units.append(unit)
 	unit.select()
+	Sound.play("select")
 	selection_changed.emit(selected_units)
 
 func _remove_from_selection(unit: Node) -> void:
