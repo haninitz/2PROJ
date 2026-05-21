@@ -299,11 +299,7 @@ func hide_map_screen() -> void:
 
 
 func _open_multiplayer() -> void:
-	_open_overlay("MULTIJOUEUR", U.C_CYAN, func(scr: Panel):
-		var info : Label = U.lbl("Mode multijoueur en developpement.", Vector2(0, 280), 18, U.C_CYAN)
-		info.size = Vector2(U.WIN_W, 40)
-		info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		scr.add_child(info))
+	get_tree().change_scene_to_file("res://scenes/online/Login.tscn")
 
 
 func _open_leaderboard() -> void:

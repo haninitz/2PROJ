@@ -23,6 +23,10 @@ MapDefs="*res://scripts/ui/MapDefs.gd"
 Sound="*res://scripts/ui/Sound.gd"
 Lang="*res://scripts/ui/Lang.gd"
 UIUtils="*res://scripts/ui/UIutils.gd"
+GameConfig="*uid://b0nuiqjdw5mef"
+NetworkManager="*uid://iojwwur0tuch"
+Matchmaker="*uid://bms3lvsxwuqk6"
+RoomManager="*uid://1yqm66fc62pl"
 
 [display]
 
