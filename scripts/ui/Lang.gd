@@ -1,24 +1,26 @@
 extends Node
 
-var current: String = "fr"
+signal language_changed(lang_code: String)
+
+var current: String = "fr" :
+	set(val):
+		current = val
+		GameConfig.set_meta("lang", val)  # persiste entre scènes
+		language_changed.emit(val)
 
 const STRINGS = {
 	"fr": {
-		# Menu principal
 		"subtitle":       "Stratégie & Conquête  •  Totally Spies",
 		"play":           "JOUER",
 		"quit":           "Quitter",
 		"back":           "← Retour",
 		"footer":         "Projet 2PROJ — SUPINFO Paris",
-		# Sélection de langue
 		"lang_title":     "Langue / Language / Idioma",
-		# Mode de jeu
 		"mode_title":     "Mode de jeu",
 		"mode_2p":        "2 Joueurs",
 		"mode_2p_desc":   "Deux joueurs humains sur le même écran",
 		"mode_1p":        "1 Joueur  (vs IA)",
 		"mode_1p_desc":   "Jouez contre une intelligence artificielle",
-		# Difficulté
 		"diff_title":     "Difficulté de l'IA",
 		"diff_easy":      "Facile",
 		"diff_easy_desc": "L'IA attaque rarement et recrute peu",
@@ -26,9 +28,7 @@ const STRINGS = {
 		"diff_med_desc":  "L'IA gère ses troupes et sait attaquer",
 		"diff_hard":      "Difficile",
 		"diff_hard_desc": "L'IA est agressive et optimise ses revenus",
-		# Sélection de carte
 		"map_title":      "Choisissez une carte",
-		# HUD
 		"player_turn":    "%s — Tour %d",
 		"gold":           "Or : %d",
 		"income":         "+%d /tour",
@@ -38,23 +38,18 @@ const STRINGS = {
 		"queue_empty":    "vide",
 		"queue_type":     "Type",
 		"queue_label":    "File",
-		# Victoire
 		"victory_title":  "VICTOIRE !",
 		"victory_sub":    "a remporté la conquête !",
 		"victory_turns":  "Partie terminée en %d tours",
 		"replay":         "REJOUER",
-		# Noms joueurs
 		"player1":        "Joueur 1",
 		"player2":        "Joueur 2",
-		# Sélection squads
 		"squad_title":    "Choisissez votre équipe",
 		"squad_p1":       "Joueur 1 — Choisissez votre équipe",
 		"squad_p2":       "Joueur 2 — Choisissez votre équipe",
-		# Écran changement de tour
 		"turn_title":     "C'est votre tour !",
 		"turn_number":    "Tour %d",
 		"turn_prompt":    "Cliquez n'importe où pour commencer",
-		# Messages de jeu
 		"msg_select":     "%s — Sélectionnez un de vos camps",
 		"msg_selected":   "%s sélectionné — Cliquez une cible ou recrutez",
 		"msg_not_yours":  "Ce camp ne vous appartient pas !",
@@ -68,6 +63,18 @@ const STRINGS = {
 		"msg_no_gold_p":  "Pas assez d'or ! (%d or requis)",
 		"msg_queue_full": "File pleine ! (3 unités maximum en attente)",
 		"msg_recruited":  "%s ajouté à la file de %s",
+		"multiplayer":    "Multijoueur",
+		"leaderboard":    "Classement",
+		"settings":       "Paramètres",
+		"new_game":       "NOUVELLE PARTIE",
+		"mode_1p_short":  "vs IA",
+		"player_names":   "Noms des joueurs",
+		"next_map":       "Suivant : Choisir la map",
+		"play_btn":       "Jouer",
+		"player_col":     "Joueur",
+		"wins":           "Victoires",
+		"losses":         "Défaites",
+		"volume":         "Volume",
 		"msg_victory":    "VICTOIRE DE %s !",
 	},
 	"en": {
@@ -124,6 +131,18 @@ const STRINGS = {
 		"msg_no_gold_p":  "Not enough gold! (%d gold required)",
 		"msg_queue_full": "Queue full! (3 units max waiting)",
 		"msg_recruited":  "%s added to %s queue",
+		"multiplayer":    "Multiplayer",
+		"leaderboard":    "Leaderboard",
+		"settings":       "Settings",
+		"new_game":       "NEW GAME",
+		"mode_1p_short":  "vs AI",
+		"player_names":   "Player names",
+		"next_map":       "Next: Choose map",
+		"play_btn":       "Play",
+		"player_col":     "Player",
+		"wins":           "Wins",
+		"losses":         "Losses",
+		"volume":         "Volume",
 		"msg_victory":    "%s WINS!",
 	},
 	"es": {
@@ -180,11 +199,29 @@ const STRINGS = {
 		"msg_no_gold_p":  "¡Oro insuficiente! (%d oro requerido)",
 		"msg_queue_full": "¡Cola llena! (máximo 3 unidades)",
 		"msg_recruited":  "%s añadido a la cola de %s",
+		"multiplayer":    "Multijugador",
+		"leaderboard":    "Clasificación",
+		"settings":       "Configuración",
+		"new_game":       "NUEVA PARTIDA",
+		"mode_1p_short":  "vs IA",
+		"player_names":   "Nombres de jugadores",
+		"next_map":       "Siguiente: Elegir mapa",
+		"play_btn":       "Jugar",
+		"player_col":     "Jugador",
+		"wins":           "Victorias",
+		"losses":         "Derrotas",
+		"volume":         "Volumen",
 		"msg_victory":    "¡%s GANA!",
 	}
 }
 
+
+func _ready() -> void:
+	# Restaure la langue sauvegardée dans GameConfig (persiste entre scènes)
+	if GameConfig.has_meta("lang"):
+		current = GameConfig.get_meta("lang")
+
+
 func t(key: String) -> String:
-	if STRINGS[current].has(key):
-		return STRINGS[current][key]
-	return key
+	var lang_dict : Dictionary = STRINGS.get(current, STRINGS["fr"])
+	return lang_dict.get(key, key)

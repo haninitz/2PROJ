@@ -1,3 +1,5 @@
 res://scripts/Main.gd
 res://scripts/online/recap_ia.gd
 res://scripts/map_tropical_painter.gd
+res://scripts/ui/Lang.gd
+res://scripts/ui/Mainmenu.gd

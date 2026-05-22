@@ -2,7 +2,7 @@ class_name MainMenu
 extends Node
 # =============================================================================
 #  Mainmenu.gd -- SupKonQuest
-#  Menu principal epure -- theme neon sombre, sans avatars
+#  Tous les textes passent par U.lt() pour la localisation
 # =============================================================================
 
 signal map_selected(map_index: int)
@@ -33,6 +33,19 @@ func initialize(parent: Node, u: Node) -> void:
 	_build_compat_screens()
 
 
+func _rebuild() -> void:
+	for child in [main_menu, setup_screen, map_screen,
+			mode_screen, difficulty_screen, squad_screen]:
+		if is_instance_valid(child):
+			child.queue_free()
+	_sparkles.clear()
+	_build_main_menu()
+	_build_setup_screen()
+	_build_map_screen()
+	_build_compat_screens()
+	main_menu.visible = true
+
+
 func animate(t: float) -> void:
 	if main_menu and main_menu.visible:
 		if title_label:
@@ -54,11 +67,9 @@ func _build_main_menu() -> void:
 	main_menu = U.make_screen()
 	_parent.add_child(main_menu)
 
-	# Fond grille
 	var grid := _GridNode.new()
 	main_menu.add_child(grid)
 
-	# Bandes verticales decoratives
 	var band_colors : Array[Color] = [U.C_PINK, U.C_CYAN, U.C_GOLD, U.C_PURPLE, U.C_PINK]
 	for i in range(5):
 		var s := ColorRect.new()
@@ -68,8 +79,7 @@ func _build_main_menu() -> void:
 		s.rotation = deg_to_rad(8.0)
 		main_menu.add_child(s)
 
-	# Titre anime
-	title_label = Label.new()
+	title_label          = Label.new()
 	title_label.text     = "SupKonQuest"
 	title_label.position = Vector2(0, 220)
 	title_label.size     = Vector2(U.WIN_W, 100)
@@ -78,38 +88,31 @@ func _build_main_menu() -> void:
 	title_label.modulate = U.C_PINK
 	main_menu.add_child(title_label)
 
-
-
-	# Diviseur
 	var d1 := ColorRect.new()
 	d1.color    = U.C_PINK
 	d1.position = Vector2(U.WIN_W / 2.0 - 220, 368)
 	d1.size     = Vector2(440, 2)
 	main_menu.add_child(d1)
 
-	# Boutons
+	# Boutons principaux — textes via U.lt()
 	var btn_data : Array = [
-		{"t": "Jouer",        "bn": Color(0.28,0.05,0.18), "bb_k": "C_PINK",   "fn": func(): UIUtils.goto(main_menu, setup_screen)},
-		{"t": "Multijoueur",  "bn": Color(0.05,0.18,0.28), "bb_k": "C_CYAN",   "fn": func(): _open_multiplayer()},
-		{"t": "Classement",   "bn": Color(0.15,0.05,0.28), "bb_k": "C_PURPLE", "fn": func(): _open_leaderboard()},
-		{"t": "Parametres",   "bn": Color(0.10,0.08,0.20), "bb_k": "C_WHITE",  "fn": func(): _open_settings()},
-		{"t": "Quitter",      "bn": Color(0.18,0.05,0.05), "bb_k": "C_WHITE",  "fn": func(): _parent.get_tree().quit()},
+		{"t": U.lt("play"),         "bn": Color(0.28,0.05,0.18), "bb_k": "C_PINK",   "fn": func(): UIUtils.goto(main_menu, setup_screen)},
+		{"t": U.lt("multiplayer"),  "bn": Color(0.05,0.18,0.28), "bb_k": "C_CYAN",   "fn": func(): _open_multiplayer()},
+		{"t": U.lt("leaderboard"),  "bn": Color(0.15,0.05,0.28), "bb_k": "C_PURPLE", "fn": func(): _open_leaderboard()},
+		{"t": U.lt("settings"),     "bn": Color(0.10,0.08,0.20), "bb_k": "C_WHITE",  "fn": func(): _open_settings()},
+		{"t": U.lt("quit"),         "bn": Color(0.18,0.05,0.05), "bb_k": "C_WHITE",  "fn": func(): _parent.get_tree().quit()},
 	]
 
-	var bb_map : Dictionary = {
-		"C_PINK": null, "C_CYAN": null, "C_PURPLE": null, "C_WHITE": Color(0.70,0.20,0.20)
-	}
-
 	for i in range(btn_data.size()):
-		var bd : Dictionary = btn_data[i]
-		var bb_key : String = bd["bb_k"]
-		var bb : Color = U.C_PINK
-		if bb_key == "C_CYAN": bb = U.C_CYAN
-		elif bb_key == "C_PURPLE": bb = U.C_PURPLE
-		elif bb_key == "C_WHITE": bb = Color(0.70, 0.20, 0.20) if i == 4 else Color(0.55, 0.50, 0.75)
+		var bd  : Dictionary = btn_data[i]
+		var bb  : Color = U.C_PINK
+		if bd["bb_k"] == "C_CYAN": bb = U.C_CYAN
+		elif bd["bb_k"] == "C_PURPLE": bb = U.C_PURPLE
+		elif bd["bb_k"] == "C_WHITE":
+			bb = Color(0.70, 0.20, 0.20) if i == 4 else Color(0.55, 0.50, 0.75)
 		var b : Button = U.btn("  " + bd["t"], Vector2(U.WIN_W / 2.0 - 180, 390 + i * 58), Vector2(360, 48), 18)
 		b.add_theme_stylebox_override("normal", U.flat(bd["bn"], bb, 2, 8))
-		b.add_theme_stylebox_override("hover", U.flat(Color(bd["bn"].r*1.8, bd["bn"].g*1.8, bd["bn"].b*1.8), bb, 2, 8))
+		b.add_theme_stylebox_override("hover",  U.flat(Color(bd["bn"].r*1.8, bd["bn"].g*1.8, bd["bn"].b*1.8), bb, 2, 8))
 		b.add_theme_color_override("font_color", U.C_WHITE)
 		b.pressed.connect(bd["fn"])
 		main_menu.add_child(b)
@@ -128,12 +131,12 @@ func _build_main_menu() -> void:
 		lb.pressed.connect(func(captured_lc: String = lc):
 			var lang : Node = _parent.get_node_or_null("/root/Lang")
 			if lang: lang.current = captured_lc
-			_parent.get_tree().reload_current_scene())
+			_rebuild())
 		main_menu.add_child(lb)
 
-	# Etoiles flottantes
-	var shapes  : Array[String] = ["*","+","x","o","#"]
-	var s_colors : Array[Color] = [U.C_PINK, U.C_CYAN, U.C_GOLD, U.C_PURPLE]
+	# Étoiles flottantes
+	var shapes   : Array[String] = ["*","+","x","o","#"]
+	var s_colors : Array[Color]  = [U.C_PINK, U.C_CYAN, U.C_GOLD, U.C_PURPLE]
 	for i in range(18):
 		var star := Label.new()
 		star.text = shapes[i % shapes.size()]
@@ -147,8 +150,7 @@ func _build_main_menu() -> void:
 		main_menu.add_child(star)
 		_sparkles.append(star)
 
-	# Footer
-	var ft : Label = U.lbl("SupKonQuest - Projet 2PROJ - SUPINFO", Vector2(0, 698), 10, Color(0.40, 0.30, 0.55))
+	var ft : Label = U.lbl(U.lt("footer"), Vector2(0, 698), 10, Color(0.40, 0.30, 0.55))
 	ft.size = Vector2(U.WIN_W, 20)
 	ft.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	main_menu.add_child(ft)
@@ -157,11 +159,11 @@ func _build_main_menu() -> void:
 func _build_setup_screen() -> void:
 	setup_screen = U.make_screen(false)
 	_parent.add_child(setup_screen)
-	U.add_header(setup_screen, "NOUVELLE PARTIE", U.C_PINK)
+	U.add_header(setup_screen, U.lt("new_game"), U.C_PINK)
 
-	setup_screen.add_child(U.lbl("Mode de jeu :", Vector2(55, 140), 13, U.C_PINK))
-	var btn2p : Button = U.btn("2 Joueurs", Vector2(55, 165), Vector2(200, 42), 15)
-	var btn1p : Button = U.btn("vs IA",     Vector2(265, 165), Vector2(200, 42), 15)
+	setup_screen.add_child(U.lbl(U.lt("mode_title") + " :", Vector2(55, 140), 13, U.C_PINK))
+	var btn2p : Button = U.btn(U.lt("mode_2p"), Vector2(55, 165), Vector2(200, 42), 15)
+	var btn1p : Button = U.btn(U.lt("mode_1p_short"), Vector2(265, 165), Vector2(200, 42), 15)
 	btn2p.add_theme_stylebox_override("normal", U.flat(Color(0.05,0.18,0.05), U.C_GREEN, 2, 8))
 	btn1p.add_theme_stylebox_override("normal", U.flat(Color(0.08,0.05,0.22), U.C_CYAN, 2, 8))
 	btn2p.add_theme_color_override("font_color", U.C_WHITE)
@@ -171,25 +173,25 @@ func _build_setup_screen() -> void:
 
 	var mode_ind := Label.new()
 	mode_ind.name = "ModeInd"
-	mode_ind.text = "Mode : 2 Joueurs"
+	mode_ind.text = U.lt("mode_2p")
 	mode_ind.position = Vector2(55, 215)
 	mode_ind.add_theme_font_size_override("font_size", 11)
 	mode_ind.add_theme_color_override("font_color", U.C_GREEN)
 	setup_screen.add_child(mode_ind)
 
 	var diff_panel := Panel.new()
-	diff_panel.name = "DiffPanel"
+	diff_panel.name    = "DiffPanel"
 	diff_panel.position = Vector2(55, 232)
-	diff_panel.size = Vector2(440, 52)
+	diff_panel.size    = Vector2(440, 52)
 	diff_panel.visible = false
 	diff_panel.add_theme_stylebox_override("panel", U.flat(Color(0.06,0.04,0.18), U.C_CYAN, 1, 8))
 	setup_screen.add_child(diff_panel)
-	diff_panel.add_child(U.lbl("Difficulte :", Vector2(8, 14), 12, U.C_CYAN))
+	diff_panel.add_child(U.lbl(U.lt("diff_title") + " :", Vector2(8, 14), 12, U.C_CYAN))
 
 	var diff_data : Array = [
-		{"t":"Facile",  "col": U.C_GREEN, "k":"easy"},
-		{"t":"Moyen",   "col": U.C_GOLD,  "k":"medium"},
-		{"t":"Difficile","col": U.C_PINK, "k":"hard"},
+		{"t": U.lt("diff_easy"),   "col": U.C_GREEN, "k": "easy"},
+		{"t": U.lt("diff_med"),    "col": U.C_GOLD,  "k": "medium"},
+		{"t": U.lt("diff_hard"),   "col": U.C_PINK,  "k": "hard"},
 	]
 	for i in range(3):
 		var dd : Dictionary = diff_data[i]
@@ -198,38 +200,39 @@ func _build_setup_screen() -> void:
 			U.flat(Color(dd["col"].r*0.18, dd["col"].g*0.18, dd["col"].b*0.18), dd["col"], 2, 6))
 		db.add_theme_color_override("font_color", U.C_WHITE)
 		var dk : String = dd["k"]
+		var dt : String = dd["t"]
 		db.pressed.connect(func():
-			_ai_difficulty = dk
-			mode_ind.text  = "Mode : IA (%s)" % dk.capitalize()
+			_ai_difficulty  = dk
+			mode_ind.text   = "Mode : IA (%s)" % dt
 			mode_ind.modulate = U.C_CYAN)
 		diff_panel.add_child(db)
 
 	btn2p.pressed.connect(func():
 		_is_ai_mode = false
 		diff_panel.visible = false
-		mode_ind.text = "Mode : 2 Joueurs"
+		mode_ind.text = U.lt("mode_2p")
 		mode_ind.modulate = U.C_GREEN)
 	btn1p.pressed.connect(func():
 		_is_ai_mode = true
 		diff_panel.visible = true
-		mode_ind.text = "Mode : IA (%s)" % _ai_difficulty.capitalize()
+		mode_ind.text = U.lt("mode_1p_short")
 		mode_ind.modulate = U.C_CYAN)
 
 	var names_y : int = 298
-	setup_screen.add_child(U.lbl("Noms des joueurs :", Vector2(55, names_y), 13, U.C_PINK))
-	_player_row(setup_screen, "Joueur 1", U.C_PINK, Vector2(55, names_y + 24), "P1Edit")
-	_player_row(setup_screen, "Joueur 2", U.C_CYAN, Vector2(55, names_y + 82), "P2Edit")
+	setup_screen.add_child(U.lbl(U.lt("player_names") + " :", Vector2(55, names_y), 13, U.C_PINK))
+	_player_row(setup_screen, U.lt("player1"), U.C_PINK, Vector2(55, names_y + 24), "P1Edit")
+	_player_row(setup_screen, U.lt("player2"), U.C_CYAN, Vector2(55, names_y + 82), "P2Edit")
 
-	var next_btn : Button = U.btn("Suivant : Choisir la map", Vector2(U.WIN_W - 320, 638), Vector2(280, 50), 18)
+	var next_btn : Button = U.btn(U.lt("next_map"), Vector2(U.WIN_W - 320, 638), Vector2(280, 50), 18)
 	next_btn.add_theme_stylebox_override("normal", U.flat(Color(0.28,0.05,0.18), U.C_PINK, 2, 10))
 	next_btn.add_theme_color_override("font_color", U.C_WHITE)
 	next_btn.pressed.connect(func():
 		var p1e : Node = setup_screen.find_child("P1Edit", true, false)
 		var p2e : Node = setup_screen.find_child("P2Edit", true, false)
-		var p1n : String = p1e.text.strip_edges() if p1e else "Joueur 1"
-		var p2n : String = "IA" if _is_ai_mode else (p2e.text.strip_edges() if p2e else "Joueur 2")
-		if p1n.is_empty(): p1n = "Joueur 1"
-		if p2n.is_empty(): p2n = "Joueur 2" if not _is_ai_mode else "IA"
+		var p1n : String = p1e.text.strip_edges() if p1e else U.lt("player1")
+		var p2n : String = "IA" if _is_ai_mode else (p2e.text.strip_edges() if p2e else U.lt("player2"))
+		if p1n.is_empty(): p1n = U.lt("player1")
+		if p2n.is_empty(): p2n = U.lt("player2") if not _is_ai_mode else "IA"
 		mode_selected.emit(_is_ai_mode, _ai_difficulty)
 		squads_selected.emit(p1n, p2n)
 		UIUtils.goto(setup_screen, map_screen))
@@ -257,7 +260,7 @@ func _player_row(parent: Control, pname: String, col: Color, pos: Vector2, edit_
 func _build_map_screen() -> void:
 	map_screen = U.make_screen(false)
 	_parent.add_child(map_screen)
-	U.add_header(map_screen, "CHOISIR UNE MAP", U.C_GOLD)
+	U.add_header(map_screen, U.lt("map_title"), U.C_GOLD)
 
 	var map_data : Array = [
 		{"name": "Beverly Hills  (Clover)", "desc": "Urbain - Riviere - Pont",     "col": U.C_PINK},
@@ -278,7 +281,7 @@ func _build_map_screen() -> void:
 		card.add_child(U.lbl(md["name"], Vector2(70, 22), 22, U.C_WHITE))
 		card.add_child(U.lbl(md["desc"], Vector2(70, 52), 13,
 			Color(md["col"].r, md["col"].g, md["col"].b, 0.85)))
-		var play : Button = U.btn("Jouer",
+		var play : Button = U.btn(U.lt("play_btn"),
 			Vector2(card.size.x - 130, 40), Vector2(110, 50), 16)
 		play.add_theme_stylebox_override("normal",
 			U.flat(Color(md["col"].r*0.22, md["col"].g*0.22, md["col"].b*0.22), md["col"], 2, 8))
@@ -303,8 +306,8 @@ func _open_multiplayer() -> void:
 
 
 func _open_leaderboard() -> void:
-	_open_overlay("CLASSEMENT", U.C_PURPLE, func(scr: Panel):
-		var headers : Array[String] = ["#","Joueur","ELO","Victoires","Defaites"]
+	_open_overlay(U.lt("leaderboard"), U.C_PURPLE, func(scr: Panel):
+		var headers : Array[String] = ["#", U.lt("player_col"), "ELO", U.lt("wins"), U.lt("losses")]
 		var cols_x  : Array[int]    = [55, 110, 380, 550, 680]
 		for i in range(headers.size()):
 			scr.add_child(U.lbl(headers[i], Vector2(cols_x[i], 148), 13, U.C_PURPLE))
@@ -324,10 +327,10 @@ func _open_leaderboard() -> void:
 
 
 func _open_settings() -> void:
-	_open_overlay("PARAMETRES", Color(0.55, 0.50, 0.75), func(scr: Panel):
-		scr.add_child(U.lbl("Langue :", Vector2(55, 130), 13, U.C_PINK))
+	_open_overlay(U.lt("settings"), Color(0.55, 0.50, 0.75), func(scr: Panel):
+		scr.add_child(U.lbl(U.lt("lang_title") + " :", Vector2(55, 130), 13, U.C_PINK))
 		var lang_codes  : Array[String] = ["fr", "en", "es"]
-		var lang_labels : Array[String] = ["Francais", "English", "Espanol"]
+		var lang_labels : Array[String] = ["Français", "English", "Español"]
 		for i in range(3):
 			var lc : String = lang_codes[i]
 			var lb : Button = U.btn(lang_labels[i], Vector2(55 + i * 148, 154), Vector2(134, 36), 13)
@@ -336,9 +339,9 @@ func _open_settings() -> void:
 			lb.pressed.connect(func(captured_lc: String = lc):
 				var lang : Node = _parent.get_node_or_null("/root/Lang")
 				if lang: lang.current = captured_lc
-				_parent.get_tree().reload_current_scene())
+				_rebuild())
 			scr.add_child(lb)
-		scr.add_child(U.lbl("Volume :", Vector2(55, 210), 13, U.C_CYAN))
+		scr.add_child(U.lbl(U.lt("volume") + " :", Vector2(55, 210), 13, U.C_CYAN))
 		var sv : HSlider = HSlider.new()
 		sv.position = Vector2(55, 232); sv.size = Vector2(350, 22)
 		sv.min_value = 0; sv.max_value = 100; sv.value = 80
