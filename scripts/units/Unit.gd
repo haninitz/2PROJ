@@ -57,11 +57,11 @@ const DAMAGE_MODIFIERS := {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# NŒUDS GODOT — à ajouter dans la scène .tscn
+# NŒUDS GODOT — récupérés ou créés dans _ready()
 # ─────────────────────────────────────────────────────────────────────────────
-@onready var nav_agent: NavigationAgent2D = $NavigationAgent2D
-@onready var attack_timer: Timer          = $AttackTimer
-@onready var range_area: Area2D           = $RangeArea
+var nav_agent   : NavigationAgent2D = null
+var attack_timer: Timer             = null
+var range_area  : Area2D            = null
 
 # Barre de vie flottante (créée par code)
 var _hp_bar_bg  : ColorRect = null
@@ -80,23 +80,52 @@ const HP_BAR_Y  : float = -28.0  # au-dessus de l'unité
 func _ready() -> void:
 	hp = max_hp
 	add_to_group("units")  # pour minimap et Soigneur
+
+	# ── Récupère ou crée les nœuds requis (défensif : fonctionne même si la
+	#    scène .tscn n'a pas encore tous les nœuds) ──────────────────────────
+	nav_agent = get_node_or_null("NavigationAgent2D")
+	if nav_agent == null:
+		nav_agent = NavigationAgent2D.new()
+		nav_agent.name = "NavigationAgent2D"
+		add_child(nav_agent)
+
+	attack_timer = get_node_or_null("AttackTimer")
+	if attack_timer == null:
+		attack_timer = Timer.new()
+		attack_timer.name = "AttackTimer"
+		add_child(attack_timer)
+
+	range_area = get_node_or_null("RangeArea")
+	if range_area == null:
+		range_area = Area2D.new()
+		range_area.name = "RangeArea"
+		var col := CollisionShape2D.new()
+		var shape := CircleShape2D.new()
+		shape.radius = attack_range if attack_range > 0 else 40.0
+		col.shape = shape
+		range_area.add_child(col)
+		add_child(range_area)
+
 	attack_timer.wait_time = hit_speed
 	attack_timer.one_shot  = false
 
 	# Connecter les signaux de la zone de portée
-	range_area.body_entered.connect(_on_range_entered)
-	range_area.body_exited.connect(_on_range_exited)
-	attack_timer.timeout.connect(_on_attack_timer)
+	if not range_area.body_entered.is_connected(_on_range_entered):
+		range_area.body_entered.connect(_on_range_entered)
+	if not range_area.body_exited.is_connected(_on_range_exited):
+		range_area.body_exited.connect(_on_range_exited)
+	if not attack_timer.timeout.is_connected(_on_attack_timer):
+		attack_timer.timeout.connect(_on_attack_timer)
 
 	# Connecter le signal dégâts à la mise à jour de la barre + label flottant
 	unit_damaged.connect(_on_unit_damaged)
 
 	# Ajuster le rayon de la zone de portée selon attack_range
-	var shape = CircleShape2D.new()
-	shape.radius = attack_range if attack_range > 0 else 40.0
+	var shape2 = CircleShape2D.new()
+	shape2.radius = attack_range if attack_range > 0 else 40.0
 	var collision = range_area.get_child(0) if range_area.get_child_count() > 0 else CollisionShape2D.new()
 	if collision is CollisionShape2D:
-		collision.shape = shape
+		collision.shape = shape2
 
 	# Créer la barre de vie flottante
 	_build_hp_bar()

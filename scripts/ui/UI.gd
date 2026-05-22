@@ -20,6 +20,7 @@ var _victory : VictoryScreen
 var _pause   : Node
 var _u       : Node
 var _game_started : bool = false
+var hud : CanvasLayer : get = _get_hud  # accès public pour Main.gd
 
 # ── Compat getters pour Main.gd ───────────────────────────────────────────────
 var main_menu         : Panel : get = _get_main_menu
@@ -74,7 +75,7 @@ func _ready() -> void:
 
 	var gm : Node = get_node_or_null("/root/GameManager")
 	if gm and gm.has_signal("game_over"):
-		gm.game_over.connect(func(winner): show_victory(winner.player_name, 0))
+		gm.game_over.connect(func(winner): show_victory(winner.player_name, 0, {}))
 
 
 func _process(_delta: float) -> void:
@@ -97,8 +98,8 @@ func _input(event: InputEvent) -> void:
 #  API publique — appelée par Main.gd
 # ─────────────────────────────────────────────────────────────────────────────
 
-func show_victory(winner_name: String, turns: int) -> void:
-	_victory.show_victory(winner_name, turns)
+func show_victory(winner_name: String, turns: int, stats: Dictionary = {}) -> void:
+	_victory.show_victory(winner_name, turns, stats)
 
 func show_turn_screen(squad_name: String, turn_number: int) -> void:
 	_victory.show_turn_screen(squad_name, turn_number)
@@ -162,6 +163,8 @@ func _get_squad_screen()      -> Panel: return _menu.squad_screen      if _menu 
 func _get_victory_screen()    -> Panel: return _victory.victory_screen if _victory else null
 func _get_turn_screen()       -> Panel: return _victory.turn_screen    if _victory else null
 
+
+func _get_hud() -> CanvasLayer: return _hud
 
 func _on_splash_finished() -> void:
 	if _menu and _menu.main_menu:

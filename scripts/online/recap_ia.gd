@@ -68,14 +68,9 @@ func _btn(parent: Control, text: String, pos: Vector2, col: Color) -> Button:
 
 
 func _on_lancer_pressed() -> void:
-	var map_idx : int = 0
+	GameConfig.mode = "ai"
 	match GameConfig.map:
-		"clover": map_idx = 0
-		"sam":    map_idx = 1
-		"alex":   map_idx = 2
+		"clover": GameConfig.map = "clover"
+		"sam":    GameConfig.map = "sam"
+		"alex":   GameConfig.map = "alex"
 	SceneLoader.goto("res://scenes/Main.tscn")
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var ui := get_tree().root.find_child("UI", true, false)
-	if ui and ui.has_method("start_from_online"):
-		ui.start_from_online(map_idx)

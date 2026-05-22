@@ -101,27 +101,32 @@ func _draw_ocean(t: float) -> void:
 
 # ── Eaux peu profondes autour des iles ────────────────────────────────────────
 func _draw_shallow_water() -> void:
+	var layers := [
+		{"offset": 55.0, "col": Color(0.07, 0.28, 0.58, 0.85)},
+		{"offset": 42.0, "col": Color(0.10, 0.36, 0.66, 0.90)},
+		{"offset": 30.0, "col": Color(0.14, 0.44, 0.72, 0.92)},
+		{"offset": 18.0, "col": Color(0.20, 0.54, 0.78, 0.95)},
+		{"offset":  8.0, "col": Color(0.28, 0.65, 0.84, 1.00)},
+	]
 	for isl in ISLANDS:
-		var steps : int = 50
-		var pts   := PackedVector2Array()
+		var steps : int = 52
+		for layer in layers:
+			var pts := PackedVector2Array()
+			for i in range(steps):
+				var angle : float = float(i) / float(steps) * TAU
+				var noise : float = _noise(angle + isl["seed"])
+				var rx : float = isl["rx"] * (1.0 + noise) + layer["offset"]
+				var ry : float = isl["ry"] * (1.0 + noise) + layer["offset"]
+				pts.append(Vector2(isl["cx"] + cos(angle) * rx,
+					isl["cy"] + sin(angle) * ry))
+			draw_colored_polygon(pts, layer["col"])
+		var pts_foam := PackedVector2Array()
 		for i in range(steps):
 			var angle : float = float(i) / float(steps) * TAU
 			var noise : float = _noise(angle + isl["seed"])
-			var rx : float = isl["rx"] * (1.0 + noise) + 35.0
-			var ry : float = isl["ry"] * (1.0 + noise) + 35.0
-			pts.append(Vector2(isl["cx"] + cos(angle)*rx,
-				isl["cy"] + sin(angle)*ry))
-		draw_colored_polygon(pts, C_OCEAN_SHAL)
-		# Zone encore plus claire
-		var pts2 := PackedVector2Array()
-		for i in range(steps):
-			var angle : float = float(i) / float(steps) * TAU
-			var noise : float = _noise(angle + isl["seed"])
-			var rx : float = isl["rx"] * (1.0 + noise) + 18.0
-			var ry : float = isl["ry"] * (1.0 + noise) + 18.0
-			pts2.append(Vector2(isl["cx"] + cos(angle)*rx,
-				isl["cy"] + sin(angle)*ry))
-		draw_colored_polygon(pts2, C_OCEAN_LITE)
+			pts_foam.append(Vector2(isl["cx"] + cos(angle) * (isl["rx"]*(1.0+noise)+3.0),
+				isl["cy"] + sin(angle) * (isl["ry"]*(1.0+noise)+3.0)))
+		draw_polyline(pts_foam, Color(0.85, 0.95, 1.00, 0.55), 2.5, true)
 
 
 # ── Iles ──────────────────────────────────────────────────────────────────────

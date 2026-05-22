@@ -5,7 +5,7 @@ extends Camera2D
 #  Zoom molette + pan clic-milieu ou clic-droit maintenu
 # ─────────────────────────────────────────────────────────────────────────────
 
-const ZOOM_MIN    : float = 0.5
+const ZOOM_MIN    : float = 1.0
 const ZOOM_MAX    : float = 3.0
 const ZOOM_STEP   : float = 0.1
 const PAN_BUTTON  : int   = MOUSE_BUTTON_MIDDLE   # clic molette pour pan

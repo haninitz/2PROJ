@@ -60,7 +60,8 @@ func draw(canvas: Node2D, font: Font, camps: Array, selected_idx: int,
 # ─────────────────────────────────────────────────────────────────────────────
 
 func _draw_camp(canvas: Node2D, font: Font, camp, is_selected: bool, t: float) -> void:
-	var col : Color = _owner_color(camp.owner)
+	# Supporte owner_id (Camp_hani Node2D) et owner (Camp RefCounted)
+	var col : Color = _owner_color(camp.get("owner_id") if "owner_id" in camp else camp.get("owner", -1))
 
 	# Ombre
 	canvas.draw_circle(camp.pos + Vector2(5, 5), CAMP_R, Color(0, 0, 0, 0.22))
@@ -89,8 +90,10 @@ func _draw_camp(canvas: Node2D, font: Font, camp, is_selected: bool, t: float) -
 			"[ PORT ]", HORIZONTAL_ALIGNMENT_CENTER, 190, 11,
 			Color(0.40, 0.70, 1.00))
 
+	# Supporte camp_name (Camp_hani) et name (Camp RefCounted)
+	var display_name : String = camp.get("camp_name") if "camp_name" in camp else camp.get("name", "?")
 	canvas.draw_string(font, camp.pos + Vector2(-95, -CAMP_R - 6.0),
-		camp.name, HORIZONTAL_ALIGNMENT_CENTER, 190, 13, Color.WHITE)
+		display_name, HORIZONTAL_ALIGNMENT_CENTER, 190, 13, Color.WHITE)
 
 	# Unité et nb
 	var tlabel : String = ""
@@ -107,9 +110,11 @@ func _draw_camp(canvas: Node2D, font: Font, camp, is_selected: bool, t: float) -
 		"+%d or" % camp.income, HORIZONTAL_ALIGNMENT_CENTER, 100, 12, C_GOLD)
 
 	# File de production
-	if camp.queue.size() > 0:
+	# Supporte queue (Camp RefCounted) et production_queue (Camp_hani) via alias
+	var _queue : Array = camp.get("queue") if "queue" in camp else camp.get("production_queue", [])
+	if _queue.size() > 0:
 		canvas.draw_string(font, camp.pos + Vector2(-40, CAMP_R + 32.0),
-			"[%d en file]" % camp.queue.size(),
+			"[%d en file]" % _queue.size(),
 			HORIZONTAL_ALIGNMENT_CENTER, 80, 10, C_GOLD)
 
 

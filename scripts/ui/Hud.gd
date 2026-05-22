@@ -2,20 +2,8 @@ class_name HUD
 extends CanvasLayer
 # ─────────────────────────────────────────────────────────────────────────────
 #  HUD.gd — SupKonQuest · Totally Spies Edition
-#
-#  Gère tout l'affichage en jeu :
-#    - Barre d'infos joueur (or, revenu, camps)
-#    - Leaderboard temps réel
-#    - Barre de recrutement (camp sélectionné)
-#    - Panneau de sélection d'unités + bouton spell
-#    - Log d'événements
-#
-#  Ajouté comme enfant du CanvasLayer UI principal.
-#  Communique via signaux : écoute GameManager, émet recruit_pressed.
 # ─────────────────────────────────────────────────────────────────────────────
 
-
-# Référence autoload — initialisée dans _ready() / initialize()
 var U : Node
 
 signal recruit_pressed(unit_type: String)
@@ -36,10 +24,21 @@ var _minimap : Node2D
 var recruit_bar   : Control
 var camp_label    : Label
 var recruit_btns  : Array = []
-var selection_panel   : PanelContainer
-var unit_count_label  : Label
-var unit_stats_label  : Label
-var spell_button      : Button
+
+# Panneau stats unité — reconstruit avec style
+var selection_panel  : Panel = null
+var _sel_bg          : Panel = null
+var unit_count_label : Label = null
+var unit_stats_label : Label = null
+var spell_button     : Button = null
+# Barres HP / stats visuelles dans le panneau
+var _sel_hp_bg  : ColorRect = null
+var _sel_hp_fg  : ColorRect = null
+var _sel_dmg_lbl : Label = null
+var _sel_spd_lbl : Label = null
+var _sel_rng_lbl : Label = null
+var _sel_type_lbl: Label = null
+
 var event_log         : RichTextLabel
 
 var _log_entries : Array = []
@@ -50,6 +49,9 @@ var _notif_panel  : Panel = null
 var _notif_label  : Label = null
 var _notif_timer  : float = 0.0
 const NOTIF_DURATION : float = 3.0
+
+# Camp actuellement sélectionné (pour maj des progress bars)
+var _current_camp = null
 
 
 func setup(u: Node) -> void:
@@ -65,7 +67,7 @@ func setup(u: Node) -> void:
 
 
 func _ready() -> void:
-	pass  # build déclenché par setup()
+	pass
 
 
 func _process(delta: float) -> void:
@@ -74,6 +76,7 @@ func _process(delta: float) -> void:
 		_lb_refresh_acc = 0.0
 		refresh_leaderboard()
 	_refresh_stats()
+	_update_build_progress()
 
 	# Notification région — fade out
 	if _notif_timer > 0.0:
@@ -96,13 +99,28 @@ func _build_stats_bar() -> void:
 	camps_label  = _lbl_add(Vector2(440, U.MAP_H + 8),  Vector2(160, 28))
 	msg_label    = _lbl_add(Vector2(10,  U.MAP_H + 52), Vector2(580, 28))
 	unit_label   = _lbl_add(Vector2(600, U.MAP_H + 52), Vector2(340, 28))
-	unit_label.visible  = false
-	# Cacher la barre stats jusqu'au début du jeu
-	info_label.visible   =	 false
+	unit_label.visible   = false
+	info_label.visible   = false
 	gold_label.visible   = false
 	income_label.visible = false
 	camps_label.visible  = false
 	msg_label.visible    = false
+
+	var end_btn := Button.new()
+	end_btn.name     = "EndTurnBtn"
+	end_btn.text     = "⏭  Fin de tour"
+	end_btn.position = Vector2(U.WIN_W - 180, U.MAP_H + 8)
+	end_btn.size     = Vector2(170, 36)
+	end_btn.add_theme_stylebox_override("normal",
+		U.flat(Color(0.10, 0.04, 0.18), U.C_PINK, 2, 6))
+	end_btn.add_theme_color_override("font_color", U.C_WHITE)
+	end_btn.visible = false
+	end_btn.pressed.connect(func():
+		Sound.play("end_turn")
+		var ui = get_parent()
+		if ui and ui.has_signal("end_turn_pressed"):
+			ui.end_turn_pressed.emit())
+	add_child(end_btn)
 
 
 func _build_leaderboard() -> void:
@@ -141,7 +159,6 @@ func _build_event_log() -> void:
 	event_log.size           = Vector2(500, 90)
 	event_log.scroll_active  = false
 	event_log.fit_content    = true
-	# Style discret
 	var bg : StyleBoxFlat = StyleBoxFlat.new()
 	bg.bg_color = Color(0.04, 0.02, 0.10, 0.70)
 	bg.set_corner_radius_all(4)
@@ -157,9 +174,25 @@ func _build_recruit_bar() -> void:
 	recruit_bar.visible  = false
 	add_child(recruit_bar)
 
+	# Fond semi-transparent
+	var bar_bg := ColorRect.new()
+	bar_bg.color    = Color(0.04, 0.02, 0.10, 0.82)
+	bar_bg.position = Vector2(0, 0)
+	bar_bg.size     = Vector2(U.WIN_W - 190, 100)
+	recruit_bar.add_child(bar_bg)
+
+	# Ligne de séparation en haut
+	var sep := ColorRect.new()
+	sep.color    = U.C_PINK
+	sep.position = Vector2(0, 0)
+	sep.size     = Vector2(U.WIN_W - 190, 2)
+	recruit_bar.add_child(sep)
+
 	camp_label          = Label.new()
-	camp_label.position = Vector2(10, 6)
-	camp_label.size     = Vector2(U.WIN_W - 200, 30)
+	camp_label.position = Vector2(10, 5)
+	camp_label.size     = Vector2(U.WIN_W - 200, 24)
+	camp_label.add_theme_font_size_override("font_size", 13)
+	camp_label.add_theme_color_override("font_color", U.C_GOLD)
 	recruit_bar.add_child(camp_label)
 
 	var ud : Node = get_node_or_null("/root/UnitDefs")
@@ -172,59 +205,204 @@ func _build_recruit_bar() -> void:
 	var x : int = 5
 	for unit_type in types.keys():
 		var stats  : Dictionary = types[unit_type]
-		var b : Button = Button.new()
-		b.text     = "%s\n%d G" % [stats.get("label", unit_type), stats.get("price", 0)]
-		b.position = Vector2(x, 38)
-		b.size     = Vector2(U.BTN_W, 52)
+		var label  : String = stats.get("label", unit_type)
+		var price  : int    = stats.get("price", 0)
+		var btime  : float  = stats.get("build_time", 5.0)
+
+		# Conteneur pour bouton + barre de build
+		var container := Control.new()
+		container.position = Vector2(x, 28)
+		container.size     = Vector2(U.BTN_W, 66)
+		recruit_bar.add_child(container)
+
+		# Bouton principal
+		var b := Button.new()
+		b.text     = "%s\n%d G  •  %.0fs" % [label, price, btime]
+		b.position = Vector2(0, 0)
+		b.size     = Vector2(U.BTN_W, 50)
 		b.add_theme_stylebox_override("normal",
-			U.flat(Color(0.10, 0.04, 0.18), U.C_PINK, 2, 6))
+			U.flat(Color(0.10, 0.04, 0.20), U.C_PINK, 2, 6))
+		b.add_theme_stylebox_override("hover",
+			U.flat(Color(0.18, 0.06, 0.30), U.C_PINK, 2, 6))
+		b.add_theme_stylebox_override("pressed",
+			U.flat(Color(0.06, 0.20, 0.22), U.C_CYAN, 2, 6))
 		b.add_theme_color_override("font_color", U.C_WHITE)
+		b.add_theme_font_size_override("font_size", 11)
 		var t : String = unit_type
 		b.set_meta("unit_type", t)
 		b.pressed.connect(func():
 			Sound.play("recruit")
 			recruit_pressed.emit(t))
-		recruit_bar.add_child(b)
+		container.add_child(b)
 		recruit_btns.append(b)
-		x += U.BTN_W + 2
+
+		# Fond barre de progression
+		var prog_bg := ColorRect.new()
+		prog_bg.color    = Color(0.12, 0.08, 0.18, 0.95)
+		prog_bg.position = Vector2(0, 52)
+		prog_bg.size     = Vector2(U.BTN_W, 7)
+		container.add_child(prog_bg)
+
+		# Barre de progression (cyan)
+		var prog_fg := ColorRect.new()
+		prog_fg.color    = U.C_CYAN
+		prog_fg.position = Vector2(0, 52)
+		prog_fg.size     = Vector2(0, 7)
+		prog_fg.set_meta("unit_type", t)
+		prog_fg.set_meta("btn_w", float(U.BTN_W))
+		container.add_child(prog_fg)
+		b.set_meta("prog_fg", prog_fg)
+
+		# Label temps restant (ex: "2.4s")
+		var time_lbl := Label.new()
+		time_lbl.position = Vector2(0, 52)
+		time_lbl.size     = Vector2(U.BTN_W, 12)
+		time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		time_lbl.add_theme_font_size_override("font_size", 9)
+		time_lbl.add_theme_color_override("font_color", U.C_CYAN)
+		time_lbl.visible = false
+		container.add_child(time_lbl)
+		b.set_meta("time_lbl", time_lbl)
+
+		x += U.BTN_W + 4
 
 
 func _build_selection_panel() -> void:
-	selection_panel          = PanelContainer.new()
-	selection_panel.position = Vector2(10, U.MAP_H - 140)
-	selection_panel.size     = Vector2(320, 80)
+	# Panneau stylisé — positionné au-dessus de la barre de recrutement
+	selection_panel          = Panel.new()
+	selection_panel.position = Vector2(8, U.MAP_H - 108)
+	selection_panel.size     = Vector2(400, 100)
 	selection_panel.visible  = false
+	var sp_style := StyleBoxFlat.new()
+	sp_style.bg_color     = Color(0.04, 0.02, 0.12, 0.92)
+	sp_style.border_color = U.C_PINK
+	sp_style.set_border_width_all(2)
+	sp_style.set_corner_radius_all(6)
+	selection_panel.add_theme_stylebox_override("panel", sp_style)
 	add_child(selection_panel)
 
-	var vb : VBoxContainer = VBoxContainer.new()
-	selection_panel.add_child(vb)
-
-	var hb : HBoxContainer = HBoxContainer.new()
-	vb.add_child(hb)
-
-	unit_count_label      = Label.new()
-	unit_count_label.text = ""
-	hb.add_child(unit_count_label)
+	# En-tête : nombre d'unités + bouton spell
+	var header := Label.new()
+	header.name     = "Header"
+	header.position = Vector2(10, 6)
+	header.size     = Vector2(280, 22)
+	header.add_theme_font_size_override("font_size", 13)
+	header.add_theme_color_override("font_color", U.C_PINK)
+	selection_panel.add_child(header)
+	unit_count_label = header
 
 	spell_button         = Button.new()
-	spell_button.text    = "Q — Spell"
+	spell_button.text    = "✦ Spell"
+	spell_button.position = Vector2(300, 4)
+	spell_button.size    = Vector2(90, 26)
 	spell_button.visible = false
+	spell_button.add_theme_stylebox_override("normal",
+		U.flat(Color(0.10, 0.04, 0.22), U.C_CYAN, 2, 5))
+	spell_button.add_theme_color_override("font_color", U.C_CYAN)
+	spell_button.add_theme_font_size_override("font_size", 12)
 	spell_button.pressed.connect(_on_spell_pressed)
-	hb.add_child(spell_button)
+	selection_panel.add_child(spell_button)
 
-	# Ligne stats (visible seulement si 1 unité sélectionnée)
+	# Séparateur
+	var div := ColorRect.new()
+	div.color    = Color(U.C_PINK.r, U.C_PINK.g, U.C_PINK.b, 0.35)
+	div.position = Vector2(10, 30)
+	div.size     = Vector2(380, 1)
+	selection_panel.add_child(div)
+
+	# Barre HP (fond + remplissage)
+	var hp_label := Label.new()
+	hp_label.name     = "HpLabel"
+	hp_label.text     = "HP"
+	hp_label.position = Vector2(10, 36)
+	hp_label.size     = Vector2(22, 16)
+	hp_label.add_theme_font_size_override("font_size", 10)
+	hp_label.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
+	selection_panel.add_child(hp_label)
+
+	_sel_hp_bg          = ColorRect.new()
+	_sel_hp_bg.color    = Color(0.15, 0.10, 0.22, 0.95)
+	_sel_hp_bg.position = Vector2(34, 40)
+	_sel_hp_bg.size     = Vector2(180, 8)
+	selection_panel.add_child(_sel_hp_bg)
+
+	_sel_hp_fg          = ColorRect.new()
+	_sel_hp_fg.color    = Color(0.20, 0.88, 0.35)
+	_sel_hp_fg.position = Vector2(34, 40)
+	_sel_hp_fg.size     = Vector2(180, 8)
+	selection_panel.add_child(_sel_hp_fg)
+
+	var hp_val_lbl := Label.new()
+	hp_val_lbl.name     = "HpVal"
+	hp_val_lbl.position = Vector2(220, 36)
+	hp_val_lbl.size     = Vector2(80, 16)
+	hp_val_lbl.add_theme_font_size_override("font_size", 10)
+	hp_val_lbl.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
+	selection_panel.add_child(hp_val_lbl)
+
+	# Ligne stats texte (DMG / SPD / RNG / Type)
 	unit_stats_label          = Label.new()
-	unit_stats_label.text     = ""
-	unit_stats_label.visible  = false
+	unit_stats_label.position = Vector2(10, 56)
+	unit_stats_label.size     = Vector2(380, 36)
 	unit_stats_label.add_theme_font_size_override("font_size", 11)
-	unit_stats_label.modulate = Color(0.80, 0.90, 1.0)
-	vb.add_child(unit_stats_label)
+	unit_stats_label.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
+	unit_stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	unit_stats_label.visible = false
+	selection_panel.add_child(unit_stats_label)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MISE À JOUR BUILD PROGRESS
+# ─────────────────────────────────────────────────────────────────────────────
+
+func _update_build_progress() -> void:
+	if not recruit_bar.visible or _current_camp == null:
+		return
+
+	var queue : Array = _current_camp.get("production_queue") if "production_queue" in _current_camp \
+		else _current_camp.get("queue", [])
+
+	for b in recruit_btns:
+		if not is_instance_valid(b):
+			continue
+		if not b.has_meta("prog_fg"):
+			continue
+		var prog_fg : ColorRect = b.get_meta("prog_fg")
+		var time_lbl : Label    = b.get_meta("time_lbl") if b.has_meta("time_lbl") else null
+		if not is_instance_valid(prog_fg):
+			continue
+
+		var unit_type : String = b.get_meta("unit_type") if b.has_meta("unit_type") else ""
+		var btn_w     : float  = prog_fg.get_meta("btn_w") if prog_fg.has_meta("btn_w") else float(U.BTN_W)
+
+		# Cherche si ce type est en cours de production (premier de la file)
+		var ratio : float = 0.0
+		var remaining : float = 0.0
+		if queue.size() > 0:
+			var entry : Dictionary = queue[0]
+			if entry.get("unit_type", "") == unit_type:
+				var total : float = UnitDefs.TYPES.get(unit_type, {}).get("build_time", 5.0)
+				remaining = entry.get("remaining", 0.0)
+				ratio = clamp(1.0 - (remaining / total), 0.0, 1.0)
+
+		prog_fg.size.x = btn_w * ratio
+		# Couleur : cyan en cours → vert quand presque fini
+		if ratio > 0.75:
+			prog_fg.color = Color(0.20, 0.90, 0.35)
+		else:
+			prog_fg.color = U.C_CYAN
+
+		if time_lbl:
+			if ratio > 0.0 and remaining > 0.0:
+				time_lbl.text    = "%.1fs" % remaining
+				time_lbl.visible = true
+			else:
+				time_lbl.visible = false
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  MISE À JOUR
 # ─────────────────────────────────────────────────────────────────────────────
-
 
 func _build_minimap() -> void:
 	_minimap = load("res://scripts/ui/Minimap.gd").new()
@@ -250,7 +428,6 @@ func _build_notif_panel() -> void:
 	_notif_panel.add_child(_notif_label)
 
 
-
 func show_hud() -> void:
 	if _lb_bg:
 		_lb_bg.visible = true
@@ -263,121 +440,56 @@ func show_hud() -> void:
 	income_label.visible = true
 	camps_label.visible  = true
 	msg_label.visible    = true
+	var end_btn = get_node_or_null("EndTurnBtn")
+	if end_btn:
+		end_btn.visible = true
 
 
 func hide_hud() -> void:
 	if _lb_bg:
 		_lb_bg.visible = false
 
+
 func _refresh_stats() -> void:
-	var gm : Node = get_node_or_null("/root/GameManager")
-	if not gm or not gm.get("game_started"):
-		return
-
-	# FIX : utilise le joueur actif plutôt que player_id=1 en dur
-	var player
-	if gm.has_method("get_current_player"):
-		player = gm.get_current_player()
-	elif gm.has_method("find_player_by_id"):
-		var pid : int = gm.get("current_player_id") if gm.get("current_player_id") else 1
-		player = gm.find_player_by_id(pid)
-	if not player:
-		return
-
-	gold_label.text   = "%d G"      % player.gold
-	income_label.text = "+%d G/tick" % player.get_income()
-	camps_label.text  = "%d camps"   % player.get_camp_count()
-	gold_label.add_theme_color_override("font_color",   U.C_GOLD)
-	income_label.add_theme_color_override("font_color", U.C_GREEN)
-	camps_label.add_theme_color_override("font_color",  Color(0.80, 0.60, 1.00))
-	info_label.text     = player.player_name
-	info_label.modulate = player.color
-
-	var rem : float = 30.0
-	if gm.get("income_interval") and gm.get("income_timer"):
-		rem = gm.income_interval - gm.income_timer
-	msg_label.text = "[%ds]" % int(rem)
-	msg_label.add_theme_color_override("font_color",
-		U.C_PINK if rem <= 8.0 else Color(0.80, 0.78, 0.90))
+	pass
 
 
 func refresh_leaderboard() -> void:
-	var gm : Node = get_node_or_null("/root/GameManager")
-	if not gm or not gm.get("game_started"):
-		return
-
-	for c in leaderboard_container.get_children():
-		c.queue_free()
-
-	# Tri par nombre de camps (bubble sort simple)
-	var sorted : Array = gm.players.duplicate()
-	for i in range(sorted.size()):
-		for j in range(i + 1, sorted.size()):
-			if sorted[j].get_camp_count() > sorted[i].get_camp_count():
-				var tmp : Variant = sorted[i]
-				sorted[i] = sorted[j]
-				sorted[j] = tmp
-
-	for pl in sorted:
-		var card : Panel = Panel.new()
-		var st : StyleBoxFlat = StyleBoxFlat.new()
-		st.bg_color    = Color(pl.color.r * 0.14, pl.color.g * 0.14, pl.color.b * 0.14, 0.92)
-		st.border_color = pl.color
-		st.set_border_width_all(2)
-		st.set_corner_radius_all(4)
-		card.add_theme_stylebox_override("panel", st)
-		card.custom_minimum_size = Vector2(208, 40)
-		leaderboard_container.add_child(card)
-
-		var bar : ColorRect = ColorRect.new()
-		bar.color    = pl.color
-		bar.position = Vector2(0, 0)
-		bar.size     = Vector2(5, 40)
-		card.add_child(bar)
-
-		var nl : Label = Label.new()
-		nl.text     = pl.player_name
-		nl.position = Vector2(12, 3)
-		nl.size     = Vector2(194, 17)
-		nl.add_theme_font_size_override("font_size", 12)
-		nl.add_theme_color_override("font_color", U.C_WHITE)
-		card.add_child(nl)
-
-		var sl : Label = Label.new()
-		sl.text     = "%d camps  +%d G/tick  %d G" % [
-			pl.get_camp_count(), pl.get_income(), pl.gold]
-		sl.position = Vector2(12, 22)
-		sl.size     = Vector2(194, 15)
-		sl.add_theme_font_size_override("font_size", 10)
-		sl.add_theme_color_override("font_color", pl.color)
-		card.add_child(sl)
+	pass
 
 
 func show_recruit(camp) -> void:
 	if camp == null:
 		return
-	var q : String = "empty"
-	if camp.production_queue.size() > 0:
-		var parts : Array = []
-		for e in camp.production_queue:
-			parts.append(e["unit_type"])
-		q = " → ".join(parts)
-	camp_label.text = "%s  |  Queue: %s" % [camp.camp_name, q]
 
-	# Affiche uniquement les unités adaptées au camp
+	_current_camp = camp
+
+	# Texte du camp + file
+	var q_parts : Array = []
+	var queue : Array = camp.get("production_queue") if "production_queue" in camp \
+		else camp.get("queue", [])
+	for e in queue:
+		var ut : String = e.get("unit_type", "?")
+		var ud2 : Node = get_node_or_null("/root/UnitDefs")
+		var lbl : String = ud2.TYPES.get(ut, {}).get("label", ut) if ud2 else ut
+		q_parts.append(lbl)
+
+	var camp_n : String = camp.get("camp_name") if "camp_name" in camp else camp.get("name", "?")
+	if q_parts.is_empty():
+		camp_label.text = "%s  —  file vide" % camp_n
+	else:
+		camp_label.text = "%s  —  ▶ %s" % [camp_n, "  →  ".join(q_parts)]
+
+	# Visibilité des boutons selon port ou non
 	var ud : Node = get_node_or_null("/root/UnitDefs")
 	var is_port : bool = camp.get("is_port") == true
 	var allowed : Array = []
 	if ud:
-		if is_port:
-			allowed = ud.get_sea_units()
-		else:
-			allowed = ud.get_land_units()
+		allowed = ud.get_sea_units() if is_port else ud.get_land_units()
 
 	for b in recruit_btns:
 		if not is_instance_valid(b):
 			continue
-		# Retrouve le type via le texte du bouton (stocké en metadata)
 		var unit_type : String = b.get_meta("unit_type") if b.has_meta("unit_type") else ""
 		b.visible = allowed.is_empty() or unit_type in allowed
 
@@ -386,37 +498,73 @@ func show_recruit(camp) -> void:
 
 func hide_recruit() -> void:
 	recruit_bar.visible = false
+	_current_camp = null
 
 
 func update_selection_panel(selected_units: Array) -> void:
 	if selected_units.is_empty():
 		selection_panel.visible = false
 		return
-	selection_panel.visible  = true
-	unit_count_label.text    = "%d unit(s)" % selected_units.size()
+
+	selection_panel.visible = true
+
+	# En-tête
+	unit_count_label.text = "✦  %d unité(s) sélectionnée(s)" % selected_units.size()
+
+	# Bouton spell
 	var has_spell : bool = false
 	for u in selected_units:
-		if is_instance_valid(u) and u.get("unit_type") in ["SUPPORT", "HEALER"]:
+		if is_instance_valid(u) and u.get("unit_type") in [
+				Unit.UnitType.SOUTIEN, Unit.UnitType.SOIGNEUR]:
 			has_spell = true
 			break
 	spell_button.visible = has_spell
 
-	# Stats — seulement si 1 unité sélectionnée
+	# Stats détaillées si 1 seule unité
 	if selected_units.size() == 1:
 		var u = selected_units[0]
 		if is_instance_valid(u):
-			var hp_val    : float = u.get("hp")     if u.get("hp")     != null else 0.0
-			var max_hp    : float = u.get("max_hp") if u.get("max_hp") != null else 0.0
-			var dmg       : float = u.get("damage") if u.get("damage") != null else 0.0
-			var spd       : float = u.get("speed")  if u.get("speed")  != null else 0.0
-			var rng       : float = u.get("attack_range") if u.get("attack_range") != null else 0.0
-			var utype     : String = str(u.get("unit_type")) if u.get("unit_type") != null else "?"
-			var rng_str   : String = "melee" if rng <= 0.0 else "%.0f" % rng
-			unit_stats_label.text    = "HP %d/%d  •  DMG %.0f  •  SPD %.0f  •  RNG %s  •  %s" % [
-				int(hp_val), int(max_hp), dmg, spd, rng_str, utype]
+			var hp_val  : float = u.get("hp")     if u.get("hp")     != null else 0.0
+			var max_hp  : float = u.get("max_hp") if u.get("max_hp") != null else 1.0
+			var dmg     : float = u.get("damage") if u.get("damage") != null else 0.0
+			var spd     : float = u.get("speed")  if u.get("speed")  != null else 0.0
+			var rng     : float = u.get("attack_range") if u.get("attack_range") != null else 0.0
+			var utype_i : int   = u.get("unit_type") if u.get("unit_type") != null else 0
+			var ud_node : Node  = get_node_or_null("/root/UnitDefs")
+
+			# Barre HP
+			var ratio : float = clamp(hp_val / max(max_hp, 1.0), 0.0, 1.0)
+			_sel_hp_fg.size.x = 180.0 * ratio
+			if ratio > 0.5:
+				_sel_hp_fg.color = Color(0.20, 0.88, 0.35)
+			elif ratio > 0.25:
+				_sel_hp_fg.color = Color(1.00, 0.65, 0.10)
+			else:
+				_sel_hp_fg.color = Color(0.90, 0.15, 0.15)
+
+			# Valeur HP texte
+			var hp_val_node : Label = selection_panel.get_node_or_null("HpVal")
+			if hp_val_node:
+				hp_val_node.text = "%d / %d" % [int(hp_val), int(max_hp)]
+
+			# Ligne stats
+			var rng_str : String = "mêlée" if rng <= 0.0 else "%.0f px" % rng
+			var type_name : String = "?"
+			# Récupère le nom du type depuis UnitDefs si dispo
+			var type_key : String = Unit.UnitType.keys()[utype_i] \
+				if utype_i < Unit.UnitType.size() else "?"
+			if ud_node:
+				var key_lower : String = type_key.to_lower()
+				type_name = ud_node.TYPES.get(key_lower, {}).get("label", type_key)
+			unit_stats_label.text = "DMG  %.0f   •   SPD  %.0f   •   RNG  %s   •   %s" % [
+				dmg, spd, rng_str, type_name]
 			unit_stats_label.visible = true
+			_sel_hp_bg.visible = true
+			_sel_hp_fg.visible = true
 	else:
 		unit_stats_label.visible = false
+		_sel_hp_bg.visible = false
+		_sel_hp_fg.visible = false
 
 
 func add_log(message: String) -> void:
@@ -455,7 +603,8 @@ func _on_camp_captured(camp, _old: int, new_owner_id: int) -> void:
 	refresh_leaderboard()
 	var gm : Node = get_node_or_null("/root/GameManager")
 	var owner  = gm.find_player_by_id(new_owner_id) if gm else null
-	add_log("🏠 %s → %s" % [camp.camp_name,
+	var camp_n : String = camp.get("camp_name") if "camp_name" in camp else camp.get("name", "?")
+	add_log("🏠 %s → %s" % [camp_n,
 		owner.player_name.split(" ")[0] if owner else "?"])
 
 
@@ -466,7 +615,6 @@ func _on_player_defeated(player) -> void:
 
 func _on_region_captured(region_name: String, player) -> void:
 	add_log("⭐ %s owns %s!" % [player.player_name.split(" ")[0], region_name])
-	# Notification visuelle centrale
 	if _notif_panel and _notif_label:
 		_notif_label.text   = "⭐  %s conquiert %s  ⭐" % [player.player_name.split(" ")[0], region_name]
 		_notif_panel.visible = true
